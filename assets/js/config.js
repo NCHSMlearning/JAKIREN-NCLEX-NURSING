@@ -1,7 +1,7 @@
 // ============================================
 // JAKIREN NCLEX NURSING - CONFIGURATION
 // ============================================
-
+ 
 const APP_CONFIG = {
     // Supabase Credentials
     SUPABASE_URL: 'https://fbsnnsnebzzedypqbbip.supabase.co',
