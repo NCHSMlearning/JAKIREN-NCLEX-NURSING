@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>Jakiren NCLEX Nursing - Login</title>
+    <!-- Remove manifest if not needed -->
+    <meta name="theme-color" content="#1b4f6e">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -12,14 +14,152 @@
             box-sizing: border-box;
         }
         
+        :root {
+            --primary-dark: #0f2b3d;
+            --primary: #1b4f6e;
+            --primary-light: #2a6f8f;
+            --success: #2e8b57;
+            --danger: #dc3545;
+            --warning: #f59e0b;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            min-height: 100vh;
             background: radial-gradient(circle at 10% 20%, #0f2b3d 0%, #1b4f6e 50%, #2a6f8f 100%);
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
+            transition: background 0.3s;
+        }
+        
+        body.dark-mode {
+            background: radial-gradient(circle at 10% 20%, #0a1a25, #0f2b3d);
+        }
+        
+        /* Language Selector */
+        .language-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .language-selector {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .dark-mode .language-selector {
+            background: #1e293b;
+            color: white;
+        }
+        
+        .selected-language {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #1b4f6e;
+        }
+        
+        .dark-mode .selected-language {
+            color: white;
+        }
+        
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            background: white;
+            border-radius: 20px;
+            padding: 10px;
+            min-width: 250px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1001;
+        }
+        
+        .dark-mode .language-dropdown {
+            background: #1e293b;
+        }
+        
+        .language-dropdown.show {
+            display: block;
+        }
+        
+        .language-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+        
+        .language-option:hover {
+            background: #f1f5f9;
+        }
+        
+        .dark-mode .language-option:hover {
+            background: #334155;
+        }
+        
+        .language-flag {
+            font-size: 24px;
+        }
+        
+        .language-name {
+            flex: 1;
+            font-weight: 500;
+            color: #1e293b;
+        }
+        
+        .dark-mode .language-name {
+            color: white;
+        }
+        
+        .dark-mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 160px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: none;
+            font-weight: 600;
+            color: #1b4f6e;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .dark-mode .dark-mode-toggle {
+            background: #1e293b;
+            color: white;
+        }
+        
+        .dark-mode-toggle:hover {
+            transform: translateY(-2px);
         }
         
         .login-card {
@@ -29,43 +169,18 @@
             max-width: 500px;
             width: 100%;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
-            animation: slideUp 0.5s ease;
+            transition: background 0.3s;
         }
         
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .dark-mode .login-card {
+            background: #1e293b;
         }
         
-        .logo {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        .logo-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-        }
-        
-        .logo h1 {
-            font-size: 32px;
-            background: linear-gradient(135deg, #0f2b3d, #2a6f8f);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
-        }
-        
-        .logo p {
-            color: #64748b;
-            font-size: 14px;
-        }
+        .logo { text-align: center; margin-bottom: 40px; }
+        .logo-icon { font-size: 64px; margin-bottom: 16px; }
+        .logo h1 { font-size: 32px; background: linear-gradient(135deg, #0f2b3d, #2a6f8f); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo p { color: #64748b; font-size: 14px; }
+        .dark-mode .logo p { color: #94a3b8; }
         
         .tab-buttons {
             display: flex;
@@ -74,6 +189,10 @@
             background: #f1f5f9;
             padding: 6px;
             border-radius: 60px;
+        }
+        
+        .dark-mode .tab-buttons {
+            background: #334155;
         }
         
         .tab-btn {
@@ -95,31 +214,17 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         
-        .tab-content {
-            display: none;
+        .dark-mode .tab-btn.active {
+            background: #1b4f6e;
+            color: white;
         }
         
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .input-group {
-            margin-bottom: 24px;
-        }
-        
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #334155;
-            font-size: 14px;
-        }
+        .input-group { margin-bottom: 24px; }
+        .input-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #334155; }
+        .dark-mode .input-group label { color: #cbd5e1; }
         
         .input-group input {
             width: 100%;
@@ -130,11 +235,13 @@
             transition: all 0.3s;
         }
         
-        .input-group input:focus {
-            outline: none;
-            border-color: #2a6f8f;
-            box-shadow: 0 0 0 4px rgba(42,111,143,0.1);
+        .dark-mode .input-group input {
+            background: #334155;
+            border-color: #475569;
+            color: white;
         }
+        
+        .input-group input:focus { outline: none; border-color: #2a6f8f; box-shadow: 0 0 0 4px rgba(42,111,143,0.1); }
         
         .login-btn {
             width: 100%;
@@ -147,13 +254,8 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
-            margin-top: 8px;
         }
-        
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(27,79,110,0.3);
-        }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(27,79,110,0.3); }
         
         .features {
             margin-top: 40px;
@@ -162,6 +264,10 @@
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
+        }
+        
+        .dark-mode .features {
+            border-top-color: #334155;
         }
         
         .feature-item {
@@ -173,6 +279,11 @@
             padding: 8px 12px;
             background: #f8fafc;
             border-radius: 50px;
+        }
+        
+        .dark-mode .feature-item {
+            background: #334155;
+            color: #cbd5e1;
         }
         
         .toast {
@@ -189,30 +300,54 @@
             transition: all 0.3s;
             pointer-events: none;
         }
-        
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
         
         @media (max-width: 640px) {
-            .login-card {
-                padding: 32px 24px;
-            }
-            .features {
-                grid-template-columns: 1fr;
-            }
-            .logo h1 {
-                font-size: 26px;
-            }
+            .login-card { padding: 32px 24px; }
+            .features { grid-template-columns: 1fr; }
+            .language-container { top: 10px; right: 10px; }
+            .dark-mode-toggle { right: 140px; top: 10px; font-size: 12px; padding: 6px 12px; }
         }
     </style>
 </head>
 <body>
+    <div class="language-container">
+        <div class="language-selector" id="languageSelectorBtn">
+            <div class="selected-language">
+                <span id="selectedFlag">🇬🇧</span>
+                <span id="selectedLanguage">English</span>
+                <span>▼</span>
+            </div>
+        </div>
+        <div class="language-dropdown" id="languageDropdown">
+            <div class="language-option" data-lang="en" data-flag="🇬🇧" data-name="English">🇬🇧 English</div>
+            <div class="language-option" data-lang="sw" data-flag="🇰🇪" data-name="Kiswahili">🇰🇪 Kiswahili</div>
+            <div class="language-option" data-lang="fr" data-flag="🇫🇷" data-name="Français">🇫🇷 Français</div>
+            <div class="language-option" data-lang="es" data-flag="🇪🇸" data-name="Español">🇪🇸 Español</div>
+            <div class="language-option" data-lang="de" data-flag="🇩🇪" data-name="Deutsch">🇩🇪 Deutsch</div>
+            <div class="language-option" data-lang="it" data-flag="🇮🇹" data-name="Italiano">🇮🇹 Italiano</div>
+            <div class="language-option" data-lang="pt" data-flag="🇵🇹" data-name="Português">🇵🇹 Português</div>
+            <div class="language-option" data-lang="ru" data-flag="🇷🇺" data-name="Русский">🇷🇺 Русский</div>
+            <div class="language-option" data-lang="zh" data-flag="🇨🇳" data-name="中文">🇨🇳 中文</div>
+            <div class="language-option" data-lang="ja" data-flag="🇯🇵" data-name="日本語">🇯🇵 日本語</div>
+            <div class="language-option" data-lang="ar" data-flag="🇸🇦" data-name="العربية">🇸🇦 العربية</div>
+            <div class="language-option" data-lang="hi" data-flag="🇮🇳" data-name="हिन्दी">🇮🇳 हिन्दी</div>
+            <div class="language-option" data-lang="ko" data-flag="🇰🇷" data-name="한국어">🇰🇷 한국어</div>
+            <div class="language-option" data-lang="tr" data-flag="🇹🇷" data-name="Türkçe">🇹🇷 Türkçe</div>
+            <div class="language-option" data-lang="nl" data-flag="🇳🇱" data-name="Nederlands">🇳🇱 Nederlands</div>
+            <div class="language-option" data-lang="pl" data-flag="🇵🇱" data-name="Polski">🇵🇱 Polski</div>
+            <div class="language-option" data-lang="vi" data-flag="🇻🇳" data-name="Tiếng Việt">🇻🇳 Tiếng Việt</div>
+            <div class="language-option" data-lang="th" data-flag="🇹🇭" data-name="ภาษาไทย">🇹🇭 ภาษาไทย</div>
+        </div>
+    </div>
+    
+    <button class="dark-mode-toggle" id="darkModeBtn">🌙 Dark Mode</button>
+    
     <div class="login-card">
         <div class="logo">
             <div class="logo-icon">🏥</div>
-            <h1>JAKIREN NCLEX</h1>
-            <p>Premium Nursing Preparation Course</p>
+            <h1 id="appTitle">JAKIREN NCLEX</h1>
+            <p id="appSubtitle">Premium Nursing Preparation Course</p>
         </div>
         
         <div class="tab-buttons">
@@ -222,11 +357,11 @@
         
         <div id="loginForm" class="tab-content active">
             <div class="input-group">
-                <label>Email Address</label>
+                <label id="loginEmailLabel">Email Address</label>
                 <input type="email" id="loginEmail" placeholder="you@example.com">
             </div>
             <div class="input-group">
-                <label>Password</label>
+                <label id="loginPasswordLabel">Password</label>
                 <input type="password" id="loginPassword" placeholder="Enter your password">
             </div>
             <button class="login-btn" id="loginButton">Login →</button>
@@ -234,25 +369,25 @@
         
         <div id="registerForm" class="tab-content">
             <div class="input-group">
-                <label>Full Name</label>
+                <label id="regNameLabel">Full Name</label>
                 <input type="text" id="regName" placeholder="John Doe">
             </div>
             <div class="input-group">
-                <label>Email Address</label>
+                <label id="regEmailLabel">Email Address</label>
                 <input type="email" id="regEmail" placeholder="you@example.com">
             </div>
             <div class="input-group">
-                <label>Password</label>
+                <label id="regPasswordLabel">Password</label>
                 <input type="password" id="regPassword" placeholder="Min 6 characters">
             </div>
             <button class="login-btn" id="registerButton">Create Account →</button>
         </div>
         
         <div class="features">
-            <div class="feature-item">🎓 180+ Lectures • 6 Months</div>
-            <div class="feature-item">🎁 First Lecture FREE</div>
-            <div class="feature-item">📱 M-Pesa & Card</div>
-            <div class="feature-item">🏆 NCLEX Focused</div>
+            <div class="feature-item" id="feature1">🎓 180+ Lectures • 6 Months</div>
+            <div class="feature-item" id="feature2">🎁 First Lecture FREE</div>
+            <div class="feature-item" id="feature3">📱 M-Pesa & Card</div>
+            <div class="feature-item" id="feature4">🏆 NCLEX Focused</div>
         </div>
     </div>
     
@@ -262,27 +397,99 @@
         // Wait for DOM to fully load
         document.addEventListener('DOMContentLoaded', function() {
             
-            // Supabase config
+            // Translations
+            const translations = {
+                en: { login: 'Login', register: 'Register', email: 'Email Address', password: 'Password', fullName: 'Full Name', loginBtn: 'Login →', registerBtn: 'Create Account →', appTitle: 'JAKIREN NCLEX', appSubtitle: 'Premium Nursing Preparation Course', feature1: '🎓 180+ Lectures • 6 Months', feature2: '🎁 First Lecture FREE', feature3: '📱 M-Pesa & Card', feature4: '🏆 NCLEX Focused' },
+                sw: { login: 'Ingia', register: 'Jisajili', email: 'Barua Pepe', password: 'Nywila', fullName: 'Jina Kamili', loginBtn: 'Ingia →', registerBtn: 'Unda Akaunti →', appTitle: 'JAKIREN NCLEX', appSubtitle: 'Kozi Bora ya Maandalizi ya NCLEX', feature1: '🎓 Zaidi ya Mihadhara 180 • Miezi 6', feature2: '🎁 Somo la Kwanza BURE', feature3: '📱 M-Pesa na Kadi', feature4: '🏆 Mtihani wa NCLEX' },
+                fr: { login: 'Connexion', register: 'S\'inscrire', email: 'Adresse Email', password: 'Mot de passe', fullName: 'Nom Complet', loginBtn: 'Connexion →', registerBtn: 'Créer un Compte →', appTitle: 'JAKIREN NCLEX', appSubtitle: 'Cours de Préparation NCLEX Premium', feature1: '🎓 180+ Cours • 6 Mois', feature2: '🎁 Premier Cours GRATUIT', feature3: '📱 M-Pesa & Carte', feature4: '🏆 Préparation NCLEX' },
+                es: { login: 'Iniciar Sesión', register: 'Registrarse', email: 'Correo Electrónico', password: 'Contraseña', fullName: 'Nombre Completo', loginBtn: 'Iniciar →', registerBtn: 'Crear Cuenta →', appTitle: 'JAKIREN NCLEX', appSubtitle: 'Curso Premium de Preparación NCLEX', feature1: '🎓 180+ Clases • 6 Meses', feature2: '🎁 Primera Clase GRATIS', feature3: '📱 M-Pesa & Tarjeta', feature4: '🏆 Enfoque NCLEX' },
+                de: { login: 'Anmelden', register: 'Registrieren', email: 'E-Mail-Adresse', password: 'Passwort', fullName: 'Vollständiger Name', loginBtn: 'Anmelden →', registerBtn: 'Konto Erstellen →', appTitle: 'JAKIREN NCLEX', appSubtitle: 'Premium NCLEX-Vorbereitungskurs', feature1: '🎓 180+ Vorlesungen • 6 Monate', feature2: '🎁 Erste Vorlesung KOSTENLOS', feature3: '📱 M-Pesa & Karte', feature4: '🏆 NCLEX-Fokus' },
+                it: { login: 'Accedi', register: 'Registrati', email: 'Indirizzo Email', password: 'Password', fullName: 'Nome Completo', loginBtn: 'Accedi →', registerBtn: 'Crea Account →', appTitle: 'JAKIREN NCLEX', appSubtitle: 'Corso di Preparazione NCLEX Premium', feature1: '🎓 180+ Lezioni • 6 Mesi', feature2: '🎁 Prima Lezione GRATUITA', feature3: '📱 M-Pesa & Carta', feature4: '🏆 Focus NCLEX' },
+                pt: { login: 'Entrar', register: 'Registrar', email: 'Endereço de Email', password: 'Senha', fullName: 'Nome Completo', loginBtn: 'Entrar →', registerBtn: 'Criar Conta →', appTitle: 'JAKIREN NCLEX', appSubtitle: 'Curso Premium de Preparação para NCLEX', feature1: '🎓 180+ Aulas • 6 Meses', feature2: '🎁 Primeira Aula GRÁTIS', feature3: '📱 M-Pesa & Cartão', feature4: '🏆 Foco NCLEX' },
+                ru: { login: 'Войти', register: 'Регистрация', email: 'Адрес электронной почты', password: 'Пароль', fullName: 'Полное имя', loginBtn: 'Войти →', registerBtn: 'Создать аккаунт →', appTitle: 'JAKIREN NCLEX', appSubtitle: 'Премиум курс подготовки к NCLEX', feature1: '🎓 180+ Лекций • 6 Месяцев', feature2: '🎁 Первая лекция БЕСПЛАТНО', feature3: '📱 M-Pesa и Карта', feature4: '🏆 Фокус на NCLEX' },
+                zh: { login: '登录', register: '注册', email: '电子邮件地址', password: '密码', fullName: '全名', loginBtn: '登录 →', registerBtn: '创建账户 →', appTitle: 'JAKIREN NCLEX', appSubtitle: '高级NCLEX备考课程', feature1: '🎓 180+ 讲座 • 6个月', feature2: '🎁 第一讲免费', feature3: '📱 M-Pesa和银行卡', feature4: '🏆 NCLEX重点' }
+            };
+            
+            let currentLang = 'en';
+            
+            // Apply language
+            function applyLanguage(langCode) {
+                const t = translations[langCode];
+                if (!t) return;
+                
+                document.getElementById('loginTabBtn').textContent = t.login;
+                document.getElementById('registerTabBtn').textContent = t.register;
+                document.getElementById('loginEmailLabel').textContent = t.email;
+                document.getElementById('loginPasswordLabel').textContent = t.password;
+                document.getElementById('regNameLabel').textContent = t.fullName;
+                document.getElementById('regEmailLabel').textContent = t.email;
+                document.getElementById('regPasswordLabel').textContent = t.password;
+                document.getElementById('loginButton').textContent = t.loginBtn;
+                document.getElementById('registerButton').textContent = t.registerBtn;
+                document.getElementById('appTitle').textContent = t.appTitle;
+                document.getElementById('appSubtitle').textContent = t.appSubtitle;
+                document.getElementById('feature1').textContent = t.feature1;
+                document.getElementById('feature2').textContent = t.feature2;
+                document.getElementById('feature3').textContent = t.feature3;
+                document.getElementById('feature4').textContent = t.feature4;
+            }
+            
+            // Change language
+            function changeLanguage(langCode, flag, name) {
+                currentLang = langCode;
+                document.getElementById('selectedFlag').innerHTML = flag;
+                document.getElementById('selectedLanguage').innerHTML = name;
+                applyLanguage(langCode);
+                localStorage.setItem('preferredLanguage', langCode);
+                document.getElementById('languageDropdown').classList.remove('show');
+            }
+            
+            // Toggle dropdown
+            function toggleLanguageDropdown() {
+                const dropdown = document.getElementById('languageDropdown');
+                dropdown.classList.toggle('show');
+            }
+            
+            // Toggle dark mode
+            function toggleDarkMode() {
+                document.body.classList.toggle('dark-mode');
+                const btn = document.getElementById('darkModeBtn');
+                if (document.body.classList.contains('dark-mode')) {
+                    btn.innerHTML = '☀️ Light Mode';
+                } else {
+                    btn.innerHTML = '🌙 Dark Mode';
+                }
+                localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+            }
+            
+            // Setup language options
+            document.querySelectorAll('.language-option').forEach(opt => {
+                opt.addEventListener('click', function() {
+                    const lang = this.getAttribute('data-lang');
+                    const flag = this.getAttribute('data-flag');
+                    const name = this.getAttribute('data-name');
+                    changeLanguage(lang, flag, name);
+                });
+            });
+            
+            // Setup buttons
+            document.getElementById('languageSelectorBtn').addEventListener('click', toggleLanguageDropdown);
+            document.getElementById('darkModeBtn').addEventListener('click', toggleDarkMode);
+            
+            // Supabase
             const SUPABASE_URL = 'https://fbsnnsnebzzedypqbbip.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZic25uc25lYnp6ZWR5cHFiYmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzY0NzAsImV4cCI6MjA5MzU1MjQ3MH0.9S0RCSCmdYkwJCi1WM-_75-1LKucxL4y-HNMMexB1Fk';
-            
-            // Create Supabase client
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
-            console.log('App started');
-            
-            // Show toast message
             function showToast(message, isError = false) {
                 const toast = document.getElementById('toast');
                 toast.textContent = message;
                 toast.style.backgroundColor = isError ? '#dc3545' : '#2e8b57';
                 toast.classList.add('show');
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 3000);
+                setTimeout(() => toast.classList.remove('show'), 3000);
             }
             
-            // Switch tabs
+            // Tab switching
             function switchToLogin() {
                 document.getElementById('loginForm').classList.add('active');
                 document.getElementById('registerForm').classList.remove('active');
@@ -297,35 +504,20 @@
                 document.getElementById('registerTabBtn').classList.add('active');
             }
             
+            document.getElementById('loginTabBtn').addEventListener('click', switchToLogin);
+            document.getElementById('registerTabBtn').addEventListener('click', switchToRegister);
+            
             // Login handler
             async function handleLogin() {
                 const email = document.getElementById('loginEmail').value;
                 const password = document.getElementById('loginPassword').value;
+                if (!email || !password) { showToast('Please enter email and password', true); return; }
                 
-                if (!email || !password) {
-                    showToast('Please enter email and password', true);
-                    return;
-                }
-                
-                console.log('Logging in:', email);
-                
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-                
-                if (error) {
-                    showToast(error.message, true);
-                    console.error('Login error:', error);
-                    return;
-                }
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) { showToast(error.message, true); return; }
                 
                 showToast('Login successful! Redirecting...');
-                console.log('Logged in:', data.user.email);
-                
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1000);
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
             }
             
             // Register handler
@@ -333,74 +525,47 @@
                 const name = document.getElementById('regName').value;
                 const email = document.getElementById('regEmail').value;
                 const password = document.getElementById('regPassword').value;
-                
-                if (!name || !email || !password) {
-                    showToast('Please fill all fields', true);
-                    return;
-                }
-                
-                if (password.length < 6) {
-                    showToast('Password must be at least 6 characters', true);
-                    return;
-                }
-                
-                console.log('Registering:', email);
+                if (!name || !email || !password) { showToast('Please fill all fields', true); return; }
+                if (password.length < 6) { showToast('Password must be at least 6 characters', true); return; }
                 
                 const { data, error } = await supabase.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: { full_name: name }
-                    }
+                    email, password,
+                    options: { data: { full_name: name } }
                 });
-                
-                if (error) {
-                    showToast(error.message, true);
-                    console.error('Register error:', error);
-                    return;
-                }
+                if (error) { showToast(error.message, true); return; }
                 
                 showToast('Registration successful! Please login.');
-                console.log('Registered:', data.user?.email);
-                
-                // Clear form
                 document.getElementById('regName').value = '';
                 document.getElementById('regEmail').value = '';
                 document.getElementById('regPassword').value = '';
-                
-                // Switch to login
                 switchToLogin();
             }
             
-            // Check if already logged in
-            async function checkSession() {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                    console.log('Already logged in, redirecting...');
-                    window.location.href = 'dashboard.html';
-                }
-            }
+            document.getElementById('loginButton').addEventListener('click', handleLogin);
+            document.getElementById('registerButton').addEventListener('click', handleRegister);
             
-            // Attach event listeners
-            document.getElementById('loginTabBtn').onclick = switchToLogin;
-            document.getElementById('registerTabBtn').onclick = switchToRegister;
-            document.getElementById('loginButton').onclick = handleLogin;
-            document.getElementById('registerButton').onclick = handleRegister;
-            
-            // Enter key support
-            document.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    const isLoginActive = document.getElementById('loginForm').classList.contains('active');
-                    if (isLoginActive) {
-                        handleLogin();
-                    } else {
-                        handleRegister();
-                    }
-                }
+            // Check existing session
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                if (session) window.location.href = 'dashboard.html';
             });
             
-            // Check session on load
-            checkSession();
+            // Load saved preferences
+            const savedLang = localStorage.getItem('preferredLanguage');
+            if (savedLang && translations[savedLang]) {
+                const langMap = { en: ['🇬🇧', 'English'], sw: ['🇰🇪', 'Kiswahili'], fr: ['🇫🇷', 'Français'], es: ['🇪🇸', 'Español'], de: ['🇩🇪', 'Deutsch'], it: ['🇮🇹', 'Italiano'], pt: ['🇵🇹', 'Português'], ru: ['🇷🇺', 'Русский'], zh: ['🇨🇳', '中文'] };
+                if (langMap[savedLang]) changeLanguage(savedLang, langMap[savedLang][0], langMap[savedLang][1]);
+            }
+            
+            if (localStorage.getItem('darkMode') === 'true') toggleDarkMode();
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                const container = document.querySelector('.language-container');
+                const dropdown = document.getElementById('languageDropdown');
+                if (container && !container.contains(event.target) && dropdown) {
+                    dropdown.classList.remove('show');
+                }
+            });
             
         });
     </script>
