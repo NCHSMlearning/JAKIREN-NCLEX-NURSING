@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Jakiren NCLEX</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f2b3d, #1b4f6e);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        .offline-container {
+            max-width: 400px;
+        }
+        h1 { font-size: 48px; margin-bottom: 20px; }
+        p { margin-bottom: 20px; opacity: 0.9; }
+        button {
+            padding: 12px 24px;
+            background: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            color: #1b4f6e;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <h1>📡</h1>
+        <h2>You're Offline</h2>
+        <p>Please check your internet connection to access Jakiren NCLEX Nursing lectures.</p>
+        <button onclick="location.reload()">Try Again</button>
+    </div>
+</body>
+</html>
