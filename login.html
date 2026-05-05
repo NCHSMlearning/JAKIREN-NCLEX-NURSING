@@ -263,105 +263,154 @@
     
     <div id="toast" class="toast"></div>
     
-    <script>
-        // YOUR SUPABASE CREDENTIALS
-        const SUPABASE_URL = 'https://fbsnnsnebzzedypqbbip.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZic25uc25lYnp6ZWR5cHFiYmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzY0NzAsImV4cCI6MjA5MzU1MjQ3MH0.9S0RCSCmdYkwJCi1WM-_75-1LKucxL4y-HNMMexB1Fk';
+  <script>
+    // YOUR SUPABASE CREDENTIALS
+    const SUPABASE_URL = 'https://fbsnnsnebzzedypqbbip.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZic25uc25lYnp6ZWR5cHFiYmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzY0NzAsImV4cCI6MjA5MzU1MjQ3MH0.9S0RCSCmdYkwJCi1WM-_75-1LKucxL4y-HNMMexB1Fk';
+    
+    // Initialize Supabase
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // Test connection immediately
+    console.log('Supabase initialized:', !!supabase);
+    
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.style.backgroundColor = isError ? '#dc3545' : '#2e8b57';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    
+    function switchTab(tab) {
+        const loginTab = document.getElementById('loginTab');
+        const registerTab = document.getElementById('registerTab');
+        const btns = document.querySelectorAll('.tab-btn');
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        btns.forEach(btn => btn.classList.remove('active'));
         
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.style.backgroundColor = isError ? '#dc3545' : '#2e8b57';
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+        if (tab === 'login') {
+            loginTab.classList.add('active');
+            registerTab.classList.remove('active');
+            btns[0].classList.add('active');
+        } else {
+            loginTab.classList.remove('active');
+            registerTab.classList.add('active');
+            btns[1].classList.add('active');
+        }
+    }
+    
+    async function handleLogin() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        
+        if (!email || !password) {
+            showToast('Please fill in all fields', true);
+            return;
         }
         
-        function switchTab(tab) {
-            const loginTab = document.getElementById('loginTab');
-            const registerTab = document.getElementById('registerTab');
-            const btns = document.querySelectorAll('.tab-btn');
-            
-            btns.forEach(btn => btn.classList.remove('active'));
-            
-            if (tab === 'login') {
-                loginTab.classList.add('active');
-                registerTab.classList.remove('active');
-                btns[0].classList.add('active');
-            } else {
-                loginTab.classList.remove('active');
-                registerTab.classList.add('active');
-                btns[1].classList.add('active');
-            }
+        console.log('Attempting login for:', email);
+        
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+        
+        if (error) {
+            console.error('Login error:', error);
+            showToast(error.message, true);
+            return;
         }
         
-        async function handleLogin() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            if (!email || !password) {
-                showToast('Please fill in all fields', true);
-                return;
-            }
-            
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-            
-            if (error) {
-                showToast(error.message, true);
-                return;
-            }
-            
-            showToast('Login successful! Redirecting...');
-            setTimeout(() => {
-                window.location.href = 'dashboard.html';
-            }, 1000);
+        console.log('Login success:', data.user.email);
+        showToast('Login successful! Redirecting...');
+        setTimeout(() => {
+            window.location.href = 'dashboard.html';
+        }, 1000);
+    }
+    
+    async function handleRegister() {
+        const name = document.getElementById('regName').value;
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        
+        if (!name || !email || !password) {
+            showToast('Please fill in all fields', true);
+            return;
         }
         
-        async function handleRegister() {
-            const name = document.getElementById('regName').value;
-            const email = document.getElementById('regEmail').value;
-            const password = document.getElementById('regPassword').value;
-            
-            if (!name || !email || !password) {
-                showToast('Please fill in all fields', true);
-                return;
-            }
-            
-            if (password.length < 6) {
-                showToast('Password must be at least 6 characters', true);
-                return;
-            }
-            
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email: email,
-                password: password,
-                options: {
-                    data: { full_name: name }
-                }
-            });
-            
-            if (authError) {
-                showToast(authError.message, true);
-                return;
-            }
-            
-            showToast('Registration successful! Please login.');
-            switchTab('login');
-            document.getElementById('regName').value = '';
-            document.getElementById('regEmail').value = '';
-            document.getElementById('regPassword').value = '';
+        if (password.length < 6) {
+            showToast('Password must be at least 6 characters', true);
+            return;
         }
         
-        // Check if already logged in
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) {
-                window.location.href = 'dashboard.html';
+        console.log('Attempting registration for:', email);
+        
+        // Create auth user
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: { full_name: name }
             }
         });
-    </script>
+        
+        if (authError) {
+            console.error('Registration error:', authError);
+            showToast(authError.message, true);
+            return;
+        }
+        
+        console.log('Registration success:', authData.user);
+        
+        try {
+            // Create profile
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert([{ id: authData.user.id, full_name: name, total_spent: 0 }]);
+            
+            if (profileError) {
+                console.warn('Profile creation warning:', profileError);
+                // Continue anyway - user can still login
+            }
+            
+            // Get free lecture (lecture 1)
+            const { data: freeLecture, error: lectureError } = await supabase
+                .from('lectures')
+                .select('id')
+                .eq('lecture_number', 1)
+                .single();
+            
+            if (!lectureError && freeLecture) {
+                await supabase.from('user_purchases').insert([
+                    { user_id: authData.user.id, lecture_id: freeLecture.id, amount_paid: 0 }
+                ]);
+            }
+        } catch (err) {
+            console.warn('Profile setup warning:', err);
+        }
+        
+        showToast('Registration successful! Please login.');
+        switchTab('login');
+        document.getElementById('regName').value = '';
+        document.getElementById('regEmail').value = '';
+        document.getElementById('regPassword').value = '';
+    }
+    
+    // Check if already logged in
+    async function checkExistingSession() {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                console.log('Existing session found, redirecting...');
+                window.location.href = 'dashboard.html';
+            }
+        } catch (err) {
+            console.log('No existing session');
+        }
+    }
+    
+    checkExistingSession();
+</script>
 </body>
 </html>
