@@ -3,7 +3,7 @@
 // ============================================
 
 let currentUser = null;
-
+ 
 // Login user
 async function login(email, password) {
     try {
