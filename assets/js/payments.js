@@ -3,7 +3,7 @@
 // ============================================
 
 let pendingPurchase = null;
-
+ 
 // Initialize payment for a lecture
 async function initPayment(lecture) {
     if (!currentUser) {
