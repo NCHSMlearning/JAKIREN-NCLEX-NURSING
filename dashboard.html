@@ -6,6 +6,8 @@
     <title>Jakiren NCLEX Nursing - Premium Lecture Series</title>
     <meta name="description" content="6-Month NCLEX Nursing Preparation Course - 180 Lectures, Pay Per Lecture">
     <link rel="stylesheet" href="style.css">
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
@@ -79,7 +81,7 @@
             </select>
         </div>
         <div class="lectures-grid" id="lecturesGrid">
-            <!-- Lectures will be loaded here -->
+            <div style="text-align: center; color: white; padding: 50px;">Loading lectures...</div>
         </div>
     </div>
 
@@ -125,7 +127,7 @@
             </div>
             <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 10px;">
                 <p style="color: #2c5282; font-size: 14px;">
-                    <strong>🔒 Secure Payment:</strong> 100% secure transaction<br>
+                    <strong>🔒 Secure Payment:</strong> 100% secure transaction via Supabase<br>
                     <strong>📖 Special Offer:</strong> Pay KES 60 total after Lecture 2 for ALL remaining lectures!
                 </p>
             </div>
@@ -137,9 +139,7 @@
         <div class="modal-content" style="max-width: 800px;">
             <span class="close-modal" onclick="closeModal('videoModal')">&times;</span>
             <div id="videoHeader"></div>
-            <div class="video-container" id="videoContainer">
-                <!-- Video will be embedded here -->
-            </div>
+            <div class="video-container" id="videoContainer"></div>
             <div class="video-notes" id="videoNotes"></div>
         </div>
     </div>
