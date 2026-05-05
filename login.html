@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Jakiren NCLEX Nursing - Login</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -263,16 +263,17 @@
     
     <div id="toast" class="toast"></div>
     
-  <script>
+<script>
     // YOUR SUPABASE CREDENTIALS
     const SUPABASE_URL = 'https://fbsnnsnebzzedypqbbip.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZic25uc25lYnp6ZWR5cHFiYmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzY0NzAsImV4cCI6MjA5MzU1MjQ3MH0.9S0RCSCmdYkwJCi1WM-_75-1LKucxL4y-HNMMexB1Fk';
     
-    // Initialize Supabase
+    // CORRECT WAY to initialize Supabase v2
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    // Test connection immediately
-    console.log('Supabase initialized:', !!supabase);
+    console.log('Supabase client created');
+    console.log('supabase.auth exists?', typeof supabase.auth);
+    console.log('supabase.from exists?', typeof supabase.from);
     
     function showToast(message, isError = false) {
         const toast = document.getElementById('toast');
@@ -311,22 +312,27 @@
         
         console.log('Attempting login for:', email);
         
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
-        
-        if (error) {
-            console.error('Login error:', error);
-            showToast(error.message, true);
-            return;
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+            
+            if (error) {
+                console.error('Login error:', error);
+                showToast(error.message, true);
+                return;
+            }
+            
+            console.log('Login success!', data.user.email);
+            showToast('Login successful! Redirecting...');
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1000);
+        } catch (err) {
+            console.error('Unexpected error:', err);
+            showToast('An error occurred. Please try again.', true);
         }
-        
-        console.log('Login success:', data.user.email);
-        showToast('Login successful! Redirecting...');
-        setTimeout(() => {
-            window.location.href = 'dashboard.html';
-        }, 1000);
     }
     
     async function handleRegister() {
@@ -346,55 +352,31 @@
         
         console.log('Attempting registration for:', email);
         
-        // Create auth user
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-                data: { full_name: name }
-            }
-        });
-        
-        if (authError) {
-            console.error('Registration error:', authError);
-            showToast(authError.message, true);
-            return;
-        }
-        
-        console.log('Registration success:', authData.user);
-        
         try {
-            // Create profile
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .insert([{ id: authData.user.id, full_name: name, total_spent: 0 }]);
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: { full_name: name }
+                }
+            });
             
-            if (profileError) {
-                console.warn('Profile creation warning:', profileError);
-                // Continue anyway - user can still login
+            if (authError) {
+                console.error('Registration error:', authError);
+                showToast(authError.message, true);
+                return;
             }
             
-            // Get free lecture (lecture 1)
-            const { data: freeLecture, error: lectureError } = await supabase
-                .from('lectures')
-                .select('id')
-                .eq('lecture_number', 1)
-                .single();
-            
-            if (!lectureError && freeLecture) {
-                await supabase.from('user_purchases').insert([
-                    { user_id: authData.user.id, lecture_id: freeLecture.id, amount_paid: 0 }
-                ]);
-            }
+            console.log('Registration success! User ID:', authData.user?.id);
+            showToast('Registration successful! Please login.');
+            switchTab('login');
+            document.getElementById('regName').value = '';
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regPassword').value = '';
         } catch (err) {
-            console.warn('Profile setup warning:', err);
+            console.error('Unexpected error:', err);
+            showToast('An error occurred. Please try again.', true);
         }
-        
-        showToast('Registration successful! Please login.');
-        switchTab('login');
-        document.getElementById('regName').value = '';
-        document.getElementById('regEmail').value = '';
-        document.getElementById('regPassword').value = '';
     }
     
     // Check if already logged in
@@ -402,11 +384,13 @@
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
-                console.log('Existing session found, redirecting...');
+                console.log('Existing session found, redirecting to dashboard');
                 window.location.href = 'dashboard.html';
+            } else {
+                console.log('No existing session, showing login form');
             }
         } catch (err) {
-            console.log('No existing session');
+            console.log('Error checking session:', err);
         }
     }
     
