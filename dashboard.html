@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Jakiren NCLEX Nursing - Premium Lecture Series</title>
+    <meta name="description" content="6-Month NCLEX Nursing Preparation Course - 180 Lectures, Pay Per Lecture">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>🏥 JAKIREN NCLEX NURSING</h1>
+                <p style="color: #718096; margin-top: 5px;">Premier NCLEX Preparation • 6 Months Intensive • 180 Lectures • 2 Hours Each</p>
+                <p style="color: #48bb78; margin-top: 5px; font-size: 14px;">⭐ First Lecture FREE • Pay Per Lecture • Lifetime Access</p>
+            </div>
+            <div class="user-info" id="userInfo">
+                <div id="authButtons">
+                    <button class="btn btn-primary" onclick="showLoginModal()">Login</button>
+                    <button class="btn btn-primary" onclick="showRegisterModal()">Register</button>
+                </div>
+                <div id="userProfile" style="display: none;">
+                    <span id="userName"></span>
+                    <button class="btn btn-danger" onclick="logout()" style="margin-left: 10px;">Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="purchasedCount">0</div>
+                <div class="stat-label">Lectures Unlocked</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalSpent">0</div>
+                <div class="stat-label">Total Spent (KES)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="remainingLectures">180</div>
+                <div class="stat-label">Lectures Remaining</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="progressPercent">0%</div>
+                <div class="stat-label">Course Progress</div>
+            </div>
+        </div>
+
+        <!-- Featured Section -->
+        <div class="featured-section">
+            <h2>🎯 NCLEX Exam Focus Areas</h2>
+            <div class="featured-grid">
+                <div class="featured-item">📚 Pharmacology</div>
+                <div class="featured-item">💉 Medical-Surgical</div>
+                <div class="featured-item">🤰 Maternity Nursing</div>
+                <div class="featured-item">👶 Pediatric Nursing</div>
+                <div class="featured-item">🧠 Psychiatric Nursing</div>
+                <div class="featured-item">⚖️ Legal & Ethics</div>
+            </div>
+        </div>
+
+        <!-- Lectures Grid -->
+        <h2 style="color: white; margin: 30px 0 20px 0;">📺 All NCLEX Lectures</h2>
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="filterLectures('all')">All Lectures</button>
+            <button class="filter-btn" onclick="filterLectures('free')">Free Lecture</button>
+            <button class="filter-btn" onclick="filterLectures('unlocked')">My Unlocked</button>
+            <button class="filter-btn" onclick="filterLectures('locked')">Locked</button>
+            <select id="monthFilter" onchange="filterByMonth()" class="month-select">
+                <option value="all">All Months</option>
+                <option value="1">Month 1: Fundamentals</option>
+                <option value="2">Month 2: Med-Surg</option>
+                <option value="3">Month 3: Pharmacology</option>
+                <option value="4">Month 4: Maternity & Peds</option>
+                <option value="5">Month 5: Psych & Ethics</option>
+                <option value="6">Month 6: Final Review</option>
+            </select>
+        </div>
+        <div class="lectures-grid" id="lecturesGrid">
+            <!-- Lectures will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('loginModal')">&times;</span>
+            <h2>Welcome Back to Jakiren NCLEX</h2>
+            <p style="color: #718096; margin-bottom: 20px;">Login to continue your NCLEX journey</p>
+            <input type="email" id="loginEmail" placeholder="Email Address" class="auth-input">
+            <input type="password" id="loginPassword" placeholder="Password" class="auth-input">
+            <button class="btn btn-primary" onclick="login()" style="width: 100%; margin-top: 10px;">Login to Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('registerModal')">&times;</span>
+            <h2>Start Your NCLEX Success</h2>
+            <p style="color: #718096; margin-bottom: 20px;">Create account to access Lecture 1 FREE</p>
+            <input type="text" id="regName" placeholder="Full Name" class="auth-input">
+            <input type="email" id="regEmail" placeholder="Email Address" class="auth-input">
+            <input type="password" id="regPassword" placeholder="Create Password" class="auth-input">
+            <button class="btn btn-primary" onclick="register()" style="width: 100%; margin-top: 10px;">Register & Get Free Lecture</button>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('paymentModal')">&times;</span>
+            <h2>💳 Unlock NCLEX Lecture</h2>
+            <div id="paymentDetails"></div>
+            <div class="payment-options">
+                <h3>Select Payment Method:</h3>
+                <button class="payment-btn mpesa-btn" onclick="processMpesa()">
+                    📱 M-Pesa (STK Push) - Instant
+                </button>
+                <button class="payment-btn card-btn" onclick="processCard()">
+                    💳 Card / PayPal / Bank
+                </button>
+            </div>
+            <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 10px;">
+                <p style="color: #2c5282; font-size: 14px;">
+                    <strong>🔒 Secure Payment:</strong> 100% secure transaction<br>
+                    <strong>📖 Special Offer:</strong> Pay KES 60 total after Lecture 2 for ALL remaining lectures!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Modal -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close-modal" onclick="closeModal('videoModal')">&times;</span>
+            <div id="videoHeader"></div>
+            <div class="video-container" id="videoContainer">
+                <!-- Video will be embedded here -->
+            </div>
+            <div class="video-notes" id="videoNotes"></div>
+        </div>
+    </div>
+
+    <!-- Bundle Offer Modal -->
+    <div id="bundleModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('bundleModal')">&times;</span>
+            <h2>🎉 Complete NCLEX Bundle Offer!</h2>
+            <div style="text-align: center; padding: 20px;">
+                <p style="font-size: 18px; margin-bottom: 10px;">Unlock ALL remaining <span id="remainingCount"></span> lectures</p>
+                <div style="font-size: 36px; color: #48bb78; font-weight: bold; margin: 20px 0;">KES 60</div>
+                <p style="color: #718096; margin-bottom: 20px;">Less than KES 1 per lecture!</p>
+                <button class="btn btn-success" onclick="purchaseBundle()" style="width: 100%; padding: 15px; font-size: 18px;">
+                    🎯 Unlock Everything Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
