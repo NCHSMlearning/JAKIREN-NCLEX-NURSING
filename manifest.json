@@ -4,7 +4,7 @@
   "description": "Premium NCLEX Nursing Preparation Course",
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#1b4f6e",
+  "theme_color": "#1b4f6e", 
   "background_color": "#0f2b3d",
   "orientation": "portrait",
   "icons": [
