@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en"> 
-<head> 
+<html lang="en">
+<head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Jakiren NCLEX Nursing - Login</title>
-   <script src="https://unpkg.com/@supabase/supabase-js@1.35.0/dist/umd/supabase.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Jakiren NCLEX Nursing - Modern Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -13,12 +13,40 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
-            background: linear-gradient(135deg, #0f2b3d 0%, #1b4f6e 50%, #2a6f8f 100%);
+            background: radial-gradient(circle at 10% 20%, rgba(15, 43, 61, 1) 0%, rgba(27, 79, 110, 1) 50%, rgba(42, 111, 143, 1) 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-20px) translateX(10px); }
+            75% { transform: translateY(20px) translateX(-10px); }
         }
         
         .login-container {
+            position: relative;
+            z-index: 1;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -27,19 +55,26 @@
         }
         
         .login-card {
-            background: white;
-            border-radius: 32px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-radius: 48px;
             padding: 48px 40px;
-            max-width: 480px;
+            max-width: 500px;
             width: 100%;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            animation: fadeInUp 0.6s ease;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
-        @keyframes fadeInUp {
+        .login-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.4);
+        }
+        
+        @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(40px);
             }
             to {
                 opacity: 1;
@@ -49,129 +84,188 @@
         
         .logo {
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 40px;
+        }
+        
+        .logo-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
         
         .logo h1 {
             font-size: 32px;
-            background: linear-gradient(135deg, #0f2b3d 0%, #1b4f6e 100%);
+            background: linear-gradient(135deg, #0f2b3d 0%, #1b4f6e 50%, #2a6f8f 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
         }
         
         .logo p {
             color: #64748b;
             font-size: 14px;
+            font-weight: 500;
         }
         
         .tab-buttons {
             display: flex;
             gap: 12px;
             margin-bottom: 32px;
-            border-bottom: 2px solid #e2e8f0;
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 60px;
         }
         
         .tab-btn {
             flex: 1;
-            padding: 12px;
+            padding: 12px 24px;
             border: none;
-            background: none;
-            font-size: 16px;
+            background: transparent;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             color: #64748b;
             transition: all 0.3s ease;
+            border-radius: 50px;
             position: relative;
         }
         
         .tab-btn.active {
+            background: white;
             color: #1b4f6e;
-        }
-        
-        .tab-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #1b4f6e, #2a6f8f);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
         
         .tab-content {
             display: none;
+            animation: fadeIn 0.4s ease;
         }
         
         .tab-content.active {
             display: block;
-            animation: fadeIn 0.4s ease;
         }
         
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            position: relative;
         }
         
         .input-group label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 500;
+            font-weight: 600;
             color: #334155;
+            font-size: 14px;
         }
         
         .input-group input {
             width: 100%;
-            padding: 14px 16px;
+            padding: 16px 18px;
             border: 2px solid #e2e8f0;
-            border-radius: 12px;
+            border-radius: 24px;
             font-size: 15px;
             transition: all 0.3s ease;
+            background: white;
+            font-weight: 500;
         }
         
         .input-group input:focus {
             outline: none;
             border-color: #2a6f8f;
-            box-shadow: 0 0 0 3px rgba(42, 111, 143, 0.1);
+            box-shadow: 0 0 0 4px rgba(42, 111, 143, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .input-icon {
+            position: absolute;
+            right: 16px;
+            top: 44px;
+            color: #94a3b8;
+            font-size: 18px;
         }
         
         .login-btn {
             width: 100%;
-            padding: 14px;
+            padding: 16px;
             background: linear-gradient(135deg, #1b4f6e 0%, #2a6f8f 100%);
             color: white;
             border: none;
             border-radius: 60px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 12px;
+            margin-top: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .login-btn:hover::before {
+            width: 300px;
+            height: 300px;
         }
         
         .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(27, 79, 110, 0.3);
+            box-shadow: 0 10px 25px rgba(27, 79, 110, 0.3);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
         }
         
         .features {
-            margin-top: 32px;
-            padding-top: 24px;
-            border-top: 1px solid #e2e8f0;
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 2px solid #f1f5f9;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
         }
         
         .feature-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 12px;
             color: #475569;
-            font-size: 14px;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-item:hover {
+            background: #e2e8f0;
+            transform: translateX(5px);
         }
         
         .feature-icon {
@@ -182,68 +276,119 @@
             position: fixed;
             bottom: 30px;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) translateY(100px);
             background: #1e293b;
             color: white;
-            padding: 12px 24px;
+            padding: 14px 28px;
             border-radius: 60px;
             font-size: 14px;
+            font-weight: 500;
             z-index: 2000;
-            opacity: 0;
-            transition: opacity 0.3s;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             pointer-events: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
         
         .toast.show {
-            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        /* Loading spinner */
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        @media (max-width: 640px) {
+            .login-card {
+                padding: 32px 24px;
+                border-radius: 32px;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo h1 {
+                font-size: 26px;
+            }
+            
+            .tab-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="particles" id="particles"></div>
+    
     <div class="login-container">
         <div class="login-card">
             <div class="logo">
-                <h1>🏥 JAKIREN NCLEX</h1>
+                <div class="logo-icon">🏥</div>
+                <h1>JAKIREN NCLEX</h1>
                 <p>Premium Nursing Preparation Course</p>
             </div>
             
             <div class="tab-buttons">
-                <button class="tab-btn active" onclick="switchTab('login')">Login</button>
-                <button class="tab-btn" onclick="switchTab('register')">Register</button>
+                <button class="tab-btn active" onclick="switchTab('login')">🔐 Login</button>
+                <button class="tab-btn" onclick="switchTab('register')">📝 Register</button>
             </div>
             
             <div id="loginTab" class="tab-content active">
                 <div class="input-group">
-                    <label>Email Address</label>
+                    <label>📧 Email Address</label>
                     <input type="email" id="loginEmail" placeholder="you@example.com">
                 </div>
                 <div class="input-group">
-                    <label>Password</label>
+                    <label>🔒 Password</label>
                     <input type="password" id="loginPassword" placeholder="Enter your password">
                 </div>
-                <button class="login-btn" onclick="handleLogin()">Login to Dashboard →</button>
+                <button class="login-btn" onclick="handleLogin()">
+                    <span class="btn-content">Login to Dashboard →</span>
+                </button>
             </div>
             
             <div id="registerTab" class="tab-content">
                 <div class="input-group">
-                    <label>Full Name</label>
+                    <label>👤 Full Name</label>
                     <input type="text" id="regName" placeholder="John Doe">
                 </div>
                 <div class="input-group">
-                    <label>Email Address</label>
+                    <label>📧 Email Address</label>
                     <input type="email" id="regEmail" placeholder="you@example.com">
                 </div>
                 <div class="input-group">
-                    <label>Password</label>
+                    <label>🔒 Password</label>
                     <input type="password" id="regPassword" placeholder="Create a password (min 6 chars)">
                 </div>
-                <button class="login-btn" onclick="handleRegister()">Create Account →</button>
+                <button class="login-btn" onclick="handleRegister()">
+                    <span class="btn-content">Create Account →</span>
+                </button>
             </div>
             
             <div class="features">
                 <div class="feature-item">
                     <span class="feature-icon">🎓</span>
-                    <span>180+ Lectures • 6 Months Program</span>
+                    <span>180+ Lectures • 6 Months</span>
                 </div>
                 <div class="feature-item">
                     <span class="feature-icon">🎁</span>
@@ -251,11 +396,11 @@
                 </div>
                 <div class="feature-item">
                     <span class="feature-icon">📱</span>
-                    <span>Pay per Lecture • M-Pesa & Card</span>
+                    <span>M-Pesa & Card Payments</span>
                 </div>
                 <div class="feature-item">
                     <span class="feature-icon">🏆</span>
-                    <span>NCLEX Exam Focused Content</span>
+                    <span>NCLEX Exam Focused</span>
                 </div>
             </div>
         </div>
@@ -263,138 +408,185 @@
     
     <div id="toast" class="toast"></div>
     
-<script>
-    // YOUR SUPABASE CREDENTIALS
-    const SUPABASE_URL = 'https://fbsnnsnebzzedypqbbip.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZic25uc25lYnp6ZWR5cHFiYmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzY0NzAsImV4cCI6MjA5MzU1MjQ3MH0.9S0RCSCmdYkwJCi1WM-_75-1LKucxL4y-HNMMexB1Fk';
-    
-    // CORRECT WAY to initialize Supabase v2
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    console.log('Supabase client created');
-    console.log('supabase.auth exists?', typeof supabase.auth);
-    console.log('supabase.from exists?', typeof supabase.from);
-    
-    function showToast(message, isError = false) {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.style.backgroundColor = isError ? '#dc3545' : '#2e8b57';
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-    
-    function switchTab(tab) {
-        const loginTab = document.getElementById('loginTab');
-        const registerTab = document.getElementById('registerTab');
-        const btns = document.querySelectorAll('.tab-btn');
-        
-        btns.forEach(btn => btn.classList.remove('active'));
-        
-        if (tab === 'login') {
-            loginTab.classList.add('active');
-            registerTab.classList.remove('active');
-            btns[0].classList.add('active');
-        } else {
-            loginTab.classList.remove('active');
-            registerTab.classList.add('active');
-            btns[1].classList.add('active');
-        }
-    }
-    
-    async function handleLogin() {
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        
-        if (!email || !password) {
-            showToast('Please fill in all fields', true);
-            return;
-        }
-        
-        console.log('Attempting login for:', email);
-        
-        try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-            
-            if (error) {
-                console.error('Login error:', error);
-                showToast(error.message, true);
-                return;
+    <script>
+        // Generate animated particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const size = Math.random() * 6 + 2;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.animationDelay = `${Math.random() * 20}s`;
+                particle.style.animationDuration = `${15 + Math.random() * 15}s`;
+                container.appendChild(particle);
             }
-            
-            console.log('Login success!', data.user.email);
-            showToast('Login successful! Redirecting...');
+        }
+        createParticles();
+        
+        // SUPABASE CONFIGURATION
+        const SUPABASE_URL = 'https://fbsnnsnebzzedypqbbip.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZic25uc25lYnp6ZWR5cHFiYmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzY0NzAsImV4cCI6MjA5MzU1MjQ3MH0.9S0RCSCmdYkwJCi1WM-_75-1LKucxL4y-HNMMexB1Fk';
+        
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        console.log('🚀 Jakiren NCLEX App Ready');
+        console.log('✅ Supabase:', supabase.auth ? 'Connected' : 'Failed');
+        
+        let isLoading = false;
+        
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.backgroundColor = isError ? '#dc3545' : '#2e8b57';
+            toast.classList.add('show');
             setTimeout(() => {
-                window.location.href = 'dashboard.html';
-            }, 1000);
-        } catch (err) {
-            console.error('Unexpected error:', err);
-            showToast('An error occurred. Please try again.', true);
-        }
-    }
-    
-    async function handleRegister() {
-        const name = document.getElementById('regName').value;
-        const email = document.getElementById('regEmail').value;
-        const password = document.getElementById('regPassword').value;
-        
-        if (!name || !email || !password) {
-            showToast('Please fill in all fields', true);
-            return;
+                toast.classList.remove('show');
+            }, 3000);
         }
         
-        if (password.length < 6) {
-            showToast('Password must be at least 6 characters', true);
-            return;
-        }
-        
-        console.log('Attempting registration for:', email);
-        
-        try {
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email: email,
-                password: password,
-                options: {
-                    data: { full_name: name }
+        function setLoading(loading, button) {
+            isLoading = loading;
+            if (button) {
+                const btnContent = button.querySelector('.btn-content');
+                if (loading) {
+                    btnContent.innerHTML = '<span class="loading-spinner" style="display: inline-block;"></span> Processing...';
+                } else {
+                    btnContent.innerHTML = button.classList.contains('login-btn') ? 
+                        (button.parentElement?.id === 'loginTab' ? 'Login to Dashboard →' : 'Create Account →') :
+                        (button.innerText.includes('Login') ? 'Login to Dashboard →' : 'Create Account →');
                 }
-            });
+            }
+        }
+        
+        window.switchTab = function(tab) {
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+            const btns = document.querySelectorAll('.tab-btn');
             
-            if (authError) {
-                console.error('Registration error:', authError);
-                showToast(authError.message, true);
+            btns.forEach(btn => btn.classList.remove('active'));
+            
+            if (tab === 'login') {
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                btns[0].classList.add('active');
+            } else {
+                loginTab.classList.remove('active');
+                registerTab.classList.add('active');
+                btns[1].classList.add('active');
+            }
+        };
+        
+        window.handleLogin = async function() {
+            if (isLoading) return;
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const button = event?.target?.closest('button');
+            
+            if (!email || !password) {
+                showToast('Please fill in all fields', true);
                 return;
             }
             
-            console.log('Registration success! User ID:', authData.user?.id);
-            showToast('Registration successful! Please login.');
-            switchTab('login');
-            document.getElementById('regName').value = '';
-            document.getElementById('regEmail').value = '';
-            document.getElementById('regPassword').value = '';
-        } catch (err) {
-            console.error('Unexpected error:', err);
-            showToast('An error occurred. Please try again.', true);
-        }
-    }
-    
-    // Check if already logged in
-    async function checkExistingSession() {
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                console.log('Existing session found, redirecting to dashboard');
-                window.location.href = 'dashboard.html';
-            } else {
-                console.log('No existing session, showing login form');
+            setLoading(true, button);
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) throw error;
+                
+                showToast(`Welcome back, ${data.user.email}! Redirecting...`);
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+                
+            } catch (error) {
+                showToast(error.message || 'Login failed. Please try again.', true);
+                setLoading(false, button);
             }
-        } catch (err) {
-            console.log('Error checking session:', err);
+        };
+        
+        window.handleRegister = async function() {
+            if (isLoading) return;
+            
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const button = event?.target?.closest('button');
+            
+            if (!name || !email || !password) {
+                showToast('Please fill in all fields', true);
+                return;
+            }
+            
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters', true);
+                return;
+            }
+            
+            setLoading(true, button);
+            
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: { full_name: name }
+                    }
+                });
+                
+                if (error) throw error;
+                
+                showToast('Account created successfully! Please login.');
+                
+                // Clear registration form
+                document.getElementById('regName').value = '';
+                document.getElementById('regEmail').value = '';
+                document.getElementById('regPassword').value = '';
+                
+                // Switch to login tab
+                window.switchTab('login');
+                
+            } catch (error) {
+                showToast(error.message || 'Registration failed. Please try again.', true);
+            } finally {
+                setLoading(false, button);
+            }
+        };
+        
+        // Auto-redirect if already logged in
+        async function checkSession() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (err) {
+                console.log('No active session');
+            }
         }
-    }
-    
-    checkExistingSession();
-</script>
+        
+        checkSession();
+        
+        // Add Enter key support
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const activeTab = document.querySelector('.tab-content.active');
+                if (activeTab.id === 'loginTab') {
+                    handleLogin();
+                } else {
+                    handleRegister();
+                }
+            }
+        });
+    </script>
 </body>
 </html>
