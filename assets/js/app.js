@@ -2,7 +2,7 @@
 // MAIN APPLICATION ENTRY POINT
 // ============================================
 
-// Initialize app
+// Initialize app 
 async function initApp() {
     console.log('🚀 Starting Jakiren NCLEX Nursing App');
     
