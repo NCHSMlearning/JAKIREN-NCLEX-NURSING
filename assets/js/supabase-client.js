@@ -14,7 +14,7 @@ function initSupabase() {
     return supabaseClient;
 }
 
-const supabase = initSupabase();
+const sb = initSupabase();
 
 // Check connection
 async function checkSupabaseConnection() {
