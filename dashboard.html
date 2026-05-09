@@ -3,597 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Jakiren NCLEX Nursing - Dashboard</title>
-    <meta name="description" content="Premium NCLEX Nursing Preparation Course - 180 Lectures">
+    <title>Jakiren NCLEX Nursing | Professional Dashboard</title>
+    <meta name="description" content="Premium NCLEX Nursing Preparation Course - 180 Lectures with smart progress tracking and analytics">
+    
+    <!-- External Stylesheets -->
+    <link rel="stylesheet" href="main/assets/css/style.css">
+    <!-- Font Awesome 6 (external library) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    
+    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #0f2b3d 0%, #1b4f6e 50%, #2a6f8f 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        /* Header Styles */
-        .header {
-            background: white;
-            border-radius: 24px;
-            padding: 20px 28px;
-            margin-bottom: 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        
-        .logo h1 {
-            font-size: 24px;
-            background: linear-gradient(135deg, #0f2b3d, #2a6f8f);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .logo p {
-            font-size: 12px;
-            color: #64748b;
-            margin-top: 4px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        
-        .user-name {
-            font-weight: 600;
-            color: #1e293b;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 50px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary { background: linear-gradient(135deg, #1b4f6e, #2a6f8f); color: white; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-success { background: #2e8b57; color: white; }
-        .btn-warning { background: #f59e0b; color: white; }
-        
-        /* Stats Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-        
-        .stat-card {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            transition: transform 0.3s;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .stat-number {
-            font-size: 36px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #1b4f6e, #2a6f8f);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .stat-label {
-            color: #64748b;
-            margin-top: 8px;
-            font-size: 14px;
-        }
-        
-        /* Welcome Banner */
-        .welcome-banner {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 20px;
-            padding: 28px 32px;
-            margin-bottom: 24px;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        
-        .welcome-banner h2 {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-        
-        .streak-badge {
-            background: rgba(255,255,255,0.2);
-            padding: 12px 20px;
-            border-radius: 60px;
-            text-align: center;
-        }
-        
-        /* Progress Section */
-        .progress-section {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-        
-        .progress-label {
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #1e293b;
-        }
-        
-        .progress-bar-container {
-            background: #e2e8f0;
-            border-radius: 60px;
-            height: 12px;
-            overflow: hidden;
-        }
-        
-        .progress-bar-fill {
-            background: linear-gradient(90deg, #2e8b57, #3cb371);
-            height: 100%;
-            width: 0%;
-            transition: width 0.5s ease;
-            border-radius: 60px;
-        }
-        
-        /* Featured Section */
-        .featured-section {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-        
-        .featured-section h3 {
-            margin-bottom: 16px;
-            color: #1e293b;
-        }
-        
-        .featured-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-        }
-        
-        .featured-item {
-            background: #f0f9ff;
-            padding: 10px 16px;
-            border-radius: 50px;
-            text-align: center;
-            font-weight: 500;
-            color: #1b4f6e;
-            font-size: 14px;
-        }
-        
-        /* Filter Bar */
-        .filter-bar {
-            background: white;
-            border-radius: 60px;
-            padding: 8px 16px;
-            margin: 20px 0;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
-        
-        .filter-btn {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 40px;
-            cursor: pointer;
-            background: #f1f5f9;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .filter-btn.active {
-            background: linear-gradient(135deg, #1b4f6e, #2a6f8f);
-            color: white;
-        }
-        
-        .month-select {
-            padding: 8px 20px;
-            border: 2px solid #e2e8f0;
-            border-radius: 40px;
-            margin-left: auto;
-            background: white;
-            cursor: pointer;
-        }
-        
-        /* Lectures Grid */
-        .lectures-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
-            margin-top: 20px;
-        }
-        
-        .lecture-card {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            position: relative;
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-        
-        .lecture-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-        }
-        
-        .lecture-card.locked {
-            opacity: 0.85;
-            background: #f8fafc;
-        }
-        
-        .badge {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            padding: 4px 12px;
-            border-radius: 50px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        
-        .badge-free { background: #f59e0b; color: white; }
-        .badge-unlocked { background: #2e8b57; color: white; }
-        .badge-locked { background: #dc3545; color: white; }
-        
-        .lecture-number {
-            background: linear-gradient(135deg, #1b4f6e, #2a6f8f);
-            color: white;
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 50px;
-            font-size: 11px;
-            margin-bottom: 12px;
-        }
-        
-        .lecture-title {
-            font-size: 17px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            line-height: 1.4;
-        }
-        
-        .lecture-duration {
-            color: #64748b;
-            font-size: 13px;
-            margin-bottom: 16px;
-        }
-        
-        .lecture-price {
-            font-size: 24px;
-            font-weight: 700;
-            color: #2e8b57;
-            margin: 16px 0;
-        }
-        
-        .watch-btn, .unlock-btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 60px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .watch-btn {
-            background: linear-gradient(135deg, #1b4f6e, #2a6f8f);
-            color: white;
-        }
-        
-        .unlock-btn {
-            background: #2e8b57;
-            color: white;
-        }
-        
-        .watch-btn:hover, .unlock-btn:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.05);
-        }
-        
-        /* Modals */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 32px;
-            padding: 32px;
-            max-width: 500px;
-            width: 90%;
-            position: relative;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .modal-close {
-            position: absolute;
-            top: 16px;
-            right: 20px;
-            font-size: 28px;
-            cursor: pointer;
-            color: #64748b;
-        }
-        
-        .modal-close:hover {
-            color: #1e293b;
-        }
-        
-        .video-container {
-            position: relative;
-            padding-bottom: 56.25%;
-            height: 0;
-            margin-top: 20px;
-        }
-        
-        .video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 16px;
-        }
-        
-        .video-notes {
-            margin-top: 16px;
-            padding: 16px;
-            background: #f0f9ff;
-            border-radius: 16px;
-        }
-        
-        .payment-btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 60px;
-            font-weight: 600;
-            margin: 8px 0;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .payment-btn:hover {
-            transform: translateY(-2px);
-        }
-        
-        .btn-mpesa { background: #6b1e1e; color: white; }
-        .btn-card { background: #1e3a8a; color: white; }
-        
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1e293b;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 60px;
-            font-size: 14px;
-            z-index: 2000;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-        }
-        
-        .toast.show {
-            opacity: 1;
-        }
-        
-        /* Loading */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-right: 8px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            body { padding: 12px; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-            .lectures-grid { grid-template-columns: 1fr; }
-            .filter-bar { flex-direction: column; border-radius: 20px; }
-            .month-select { margin-left: 0; width: 100%; }
-            .featured-grid { grid-template-columns: repeat(2, 1fr); }
-            .welcome-banner { flex-direction: column; text-align: center; }
-            .header { flex-direction: column; text-align: center; }
-        }
-        
-        @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr; }
-            .stat-number { font-size: 28px; }
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">
-                <h1>🏥 JAKIREN NCLEX NURSING</h1>
-                <p>Premium NCLEX Preparation • 180 Lectures • 6 Months</p>
+    <div class="app-wrapper">
+        <!-- Sidebar Navigation (Professional Account Layout) -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">🏥</div>
+                <div class="brand-text">
+                    <h2>Jakiren</h2>
+                    <span>NCLEX Nursing</span>
+                </div>
             </div>
-            <div class="user-info">
-                <span class="user-name" id="userName"></span>
-                <button class="btn btn-danger" id="logoutBtn">Logout</button>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-book-open"></i>
+                    <span>My Lectures</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Progress</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-certificate"></i>
+                    <span>Certificates</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-headset"></i>
+                    <span>Support</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile-mini">
+                    <div class="user-avatar" id="userAvatar">👤</div>
+                    <div class="user-info-mini">
+                        <span id="sidebarUserName">Loading...</span>
+                        <small>NCLEX Candidate</small>
+                    </div>
+                </div>
+                <button class="btn-logout" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
             </div>
-        </div>
-        
-        <!-- Welcome Banner -->
-        <div class="welcome-banner">
-            <div>
-                <h2>Welcome back, <span id="welcomeName"></span>! 👋</h2>
-                <p>Continue your NCLEX journey. You're making great progress toward becoming a registered nurse!</p>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header Bar -->
+            <div class="top-bar">
+                <div class="page-title">
+                    <h1><i class="fas fa-graduation-cap"></i> Nursing Dashboard</h1>
+                    <p>Track your NCLEX journey to success</p>
+                </div>
+                <div class="top-actions">
+                    <div class="notification-badge">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge-dot"></span>
+                    </div>
+                    <div class="profile-dropdown">
+                        <span class="user-greeting">Welcome, <strong id="welcomeNameShort">Nurse</strong></span>
+                    </div>
+                </div>
             </div>
-            <div class="streak-badge">
-                <div>📚 NCLEX Ready</div>
-                <small>Keep going!</small>
+
+            <!-- Welcome Banner -->
+            <div class="welcome-banner">
+                <div class="welcome-text">
+                    <h2>Welcome back, <span id="welcomeName">Nurse</span>! 👋</h2>
+                    <p>Continue your NCLEX journey. You're making great progress toward becoming a registered nurse!</p>
+                    <div class="motivation-tag">⭐ 180 Lectures • 6 Months Premium Access</div>
+                </div>
+                <div class="streak-badge">
+                    <i class="fas fa-calendar-week"></i>
+                    <div class="streak-number">🔥</div>
+                    <small>NCLEX Ready</small>
+                </div>
             </div>
-        </div>
-        
-        <!-- Stats -->
-        <div class="stats-grid">
-            <div class="stat-card"><div class="stat-number" id="purchasedCount">0</div><div class="stat-label">Lectures Unlocked</div></div>
-            <div class="stat-card"><div class="stat-number" id="totalSpent">0</div><div class="stat-label">Total Spent (KES)</div></div>
-            <div class="stat-card"><div class="stat-number" id="remainingLectures">180</div><div class="stat-label">Remaining</div></div>
-            <div class="stat-card"><div class="stat-number" id="progressPercent">0%</div><div class="stat-label">Progress</div></div>
-        </div>
-        
-        <!-- Progress Bar -->
-        <div class="progress-section">
-            <div class="progress-label">📊 Your Course Progress</div>
-            <div class="progress-bar-container">
-                <div class="progress-bar-fill" id="progressBar"></div>
+
+            <!-- Statistics Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper"><i class="fas fa-lock-open"></i></div>
+                    <div class="stat-number" id="purchasedCount">0</div>
+                    <div class="stat-label">Lectures Unlocked</div>
+                    <div class="stat-trend positive"><i class="fas fa-arrow-up"></i> +12% this week</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper"><i class="fas fa-coins"></i></div>
+                    <div class="stat-number" id="totalSpent">KES 0</div>
+                    <div class="stat-label">Total Investment</div>
+                    <div class="stat-trend">Lifetime access</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="stat-number" id="remainingLectures">180</div>
+                    <div class="stat-label">Remaining Lectures</div>
+                    <div class="stat-trend">Keep pushing!</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-number" id="progressPercent">0%</div>
+                    <div class="stat-label">Overall Progress</div>
+                    <div class="progress-ring" id="progressRing"></div>
+                </div>
             </div>
-        </div>
-        
-        <!-- Featured Topics -->
-        <div class="featured-section">
-            <h3>🎯 NCLEX Exam Focus Areas</h3>
-            <div class="featured-grid">
-                <div class="featured-item">📚 Pharmacology</div>
-                <div class="featured-item">💉 Medical-Surgical</div>
-                <div class="featured-item">🤰 Maternity Nursing</div>
-                <div class="featured-item">👶 Pediatric Nursing</div>
-                <div class="featured-item">🧠 Psychiatric Nursing</div>
-                <div class="featured-item">⚖️ Legal & Ethics</div>
-                <div class="featured-item">🫁 Respiratory</div>
-                <div class="featured-item">❤️ Cardiovascular</div>
+
+            <!-- Detailed Progress Section -->
+            <div class="progress-section">
+                <div class="progress-header">
+                    <div class="progress-label"><i class="fas fa-chart-simple"></i> Course Completion Tracker</div>
+                    <div class="progress-value" id="progressPercentLabel">0% Complete</div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progressBar"></div>
+                </div>
+                <div class="progress-details">
+                    <span id="progressDetailText">🎯 Unlock more lectures to advance your NCLEX prep</span>
+                </div>
             </div>
-        </div>
-        
-        <!-- Filters -->
-        <div class="filter-bar">
-            <button class="filter-btn active" data-filter="all">All Lectures</button>
-            <button class="filter-btn" data-filter="unlocked">Unlocked</button>
-            <button class="filter-btn" data-filter="locked">Locked</button>
-            <select id="monthFilter" class="month-select">
-                <option value="all">All Months</option>
-                <option value="1">📘 Month 1: Fundamentals</option>
-                <option value="2">💉 Month 2: Medical-Surgical</option>
-                <option value="3">💊 Month 3: Pharmacology</option>
-                <option value="4">🤰 Month 4: Maternity & Pediatrics</option>
-                <option value="5">🧠 Month 5: Psychiatric Nursing</option>
-                <option value="6">⭐ Month 6: Final Review</option>
-            </select>
-        </div>
-        
-        <!-- Lectures Grid -->
-        <div class="lectures-grid" id="lecturesGrid">
-            <div style="text-align: center; padding: 50px; color: white;">Loading lectures...</div>
-        </div>
+
+            <!-- Featured Topics (NCLEX Focus Areas) -->
+            <div class="featured-section">
+                <h3><i class="fas fa-bullseye"></i> NCLEX Exam Focus Areas</h3>
+                <div class="featured-grid">
+                    <div class="featured-item"><i class="fas fa-capsules"></i> Pharmacology</div>
+                    <div class="featured-item"><i class="fas fa-stethoscope"></i> Medical-Surgical</div>
+                    <div class="featured-item"><i class="fas fa-baby-carriage"></i> Maternity Nursing</div>
+                    <div class="featured-item"><i class="fas fa-child"></i> Pediatric Nursing</div>
+                    <div class="featured-item"><i class="fas fa-brain"></i> Psychiatric Nursing</div>
+                    <div class="featured-item"><i class="fas fa-gavel"></i> Legal & Ethics</div>
+                    <div class="featured-item"><i class="fas fa-lungs"></i> Respiratory</div>
+                    <div class="featured-item"><i class="fas fa-heartbeat"></i> Cardiovascular</div>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all"><i class="fas fa-list"></i> All</button>
+                    <button class="filter-btn" data-filter="unlocked"><i class="fas fa-check-circle"></i> Unlocked</button>
+                    <button class="filter-btn" data-filter="locked"><i class="fas fa-lock"></i> Locked</button>
+                </div>
+                <select id="monthFilter" class="month-select">
+                    <option value="all">📅 All Months</option>
+                    <option value="1">📘 Month 1: Fundamentals</option>
+                    <option value="2">💉 Month 2: Medical-Surgical</option>
+                    <option value="3">💊 Month 3: Pharmacology</option>
+                    <option value="4">🤰 Month 4: Maternity & Pediatrics</option>
+                    <option value="5">🧠 Month 5: Psychiatric Nursing</option>
+                    <option value="6">⭐ Month 6: Final Review</option>
+                </select>
+            </div>
+
+            <!-- Lectures Grid -->
+            <div class="lectures-grid" id="lecturesGrid">
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-pulse"></i> Loading premium lectures...
+                </div>
+            </div>
+        </main>
     </div>
-    
+
     <!-- Payment Modal -->
     <div id="paymentModal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal('paymentModal')">&times;</span>
-            <h2>💳 Unlock Lecture</h2>
+            <div class="modal-header">
+                <i class="fas fa-unlock-alt"></i>
+                <h2>Unlock Premium Lecture</h2>
+            </div>
             <div id="paymentDetails"></div>
-            <button class="payment-btn btn-mpesa" onclick="processMpesaPayment()">📱 M-Pesa (STK Push)</button>
-            <button class="payment-btn btn-card" onclick="processCardPayment()">💳 Card / PayPal</button>
+            <div class="payment-actions">
+                <button class="payment-btn btn-mpesa" onclick="processMpesaPayment()">
+                    <i class="fas fa-mobile-alt"></i> M-Pesa (STK Push)
+                </button>
+                <button class="payment-btn btn-card" onclick="processCardPayment()">
+                    <i class="fab fa-cc-visa"></i> Card / PayPal
+                </button>
+            </div>
         </div>
     </div>
-    
+
     <!-- Bundle Modal -->
     <div id="bundleModal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal('bundleModal')">&times;</span>
-            <h2>🎉 Complete NCLEX Bundle!</h2>
-            <div id="bundleDetails" style="text-align: center;"></div>
+            <div class="modal-header success">
+                <i class="fas fa-gift"></i>
+                <h2>Complete NCLEX Bundle Offer!</h2>
+            </div>
+            <div id="bundleDetails" class="bundle-details"></div>
         </div>
     </div>
-    
+
     <!-- Video Modal -->
     <div id="videoModal" class="modal">
-        <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-content video-modal-content">
             <span class="modal-close" onclick="closeModal('videoModal')">&times;</span>
             <div id="videoHeader"></div>
             <div class="video-container" id="videoContainer"></div>
             <div id="videoNotes" class="video-notes"></div>
         </div>
     </div>
-    
-    <!-- Toast -->
+
+    <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
     <script>
-        // Wait for DOM to load
-        document.addEventListener('DOMContentLoaded', function() {
-            
+        // ==================== PROFESSIONAL NCLEX DASHBOARD ====================
+        (function() {
             // Supabase Configuration
             const SUPABASE_URL = 'https://fbsnnsnebzzedypqbbip.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZic25uc25lYnp6ZWR5cHFiYmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzY0NzAsImV4cCI6MjA5MzU1MjQ3MH0.9S0RCSCmdYkwJCi1WM-_75-1LKucxL4y-HNMMexB1Fk';
             
-            // Create Supabase client
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
-            // Global variables
+            // Global State
             let currentUser = null;
             let allLectures = [];
             let userPurchases = [];
@@ -601,24 +245,22 @@
             let currentMonth = 'all';
             let pendingLecture = null;
             
-            // Helper functions
+            // Helper Functions
             function showToast(message, isError = false) {
                 const toast = document.getElementById('toast');
                 toast.textContent = message;
-                toast.style.backgroundColor = isError ? '#dc3545' : '#2e8b57';
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 3000);
+                toast.className = 'toast show';
+                toast.style.backgroundColor = isError ? '#dc3545' : '#1f8a5c';
+                setTimeout(() => toast.classList.remove('show'), 3500);
             }
             
             function showModal(modalId) {
                 document.getElementById(modalId).style.display = 'flex';
             }
             
-            function closeModal(modalId) {
+            window.closeModal = function(modalId) {
                 document.getElementById(modalId).style.display = 'none';
-            }
-            
-            window.closeModal = closeModal;
+            };
             
             function formatCurrency(amount) {
                 return `KES ${amount.toLocaleString()}`;
@@ -636,7 +278,7 @@
                 return months[month] || `Month ${month}`;
             }
             
-            // Auth functions
+            // Authentication
             async function checkAuth() {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) {
@@ -646,7 +288,9 @@
                 currentUser = user;
                 const displayName = user.user_metadata?.full_name || user.email.split('@')[0];
                 document.getElementById('welcomeName').innerHTML = displayName;
-                document.getElementById('userName').innerHTML = `👋 ${displayName}`;
+                document.getElementById('welcomeNameShort').innerHTML = displayName;
+                document.getElementById('sidebarUserName').innerHTML = displayName;
+                document.getElementById('userAvatar').innerHTML = displayName.charAt(0).toUpperCase();
                 return user;
             }
             
@@ -657,7 +301,7 @@
             
             document.getElementById('logoutBtn').onclick = () => window.logout();
             
-            // Data loading
+            // Data Loading
             async function loadLectures() {
                 const { data } = await supabase.from('lectures').select('*').order('lecture_number');
                 if (data) allLectures = data;
@@ -671,7 +315,7 @@
                 return userPurchases;
             }
             
-            // Payment functions
+            // Payment Handlers
             window.unlockLecture = async function(lecture) {
                 if (!currentUser) return;
                 if (userPurchases.includes(lecture.id)) {
@@ -683,19 +327,24 @@
                 if (lecture.lecture_number === 2) {
                     const remaining = allLectures.filter(l => l.lecture_number > 2 && !userPurchases.includes(l.id)).length;
                     const bundleHtml = `
-                        <p style="margin: 20px 0;">Unlock ALL remaining ${remaining} lectures for only</p>
-                        <div style="font-size: 48px; color: #2e8b57; font-weight: bold;">${formatCurrency(60)}</div>
-                        <p style="margin: 20px 0;">Less than KES 1 per lecture!</p>
-                        <button class="btn btn-success" onclick="purchaseBundle()" style="width: 100%; padding: 14px; font-size: 16px;">🎯 Unlock Everything Now</button>
+                        <div class="bundle-offer">
+                            <i class="fas fa-rocket"></i>
+                            <p>Unlock ALL remaining <strong>${remaining}</strong> lectures for only</p>
+                            <div class="bundle-price">${formatCurrency(60)}</div>
+                            <p class="bundle-note">Less than KES 1 per lecture!</p>
+                            <button class="btn btn-success btn-bundle" onclick="purchaseBundle()">🎯 Unlock Everything Now</button>
+                        </div>
                     `;
                     document.getElementById('bundleDetails').innerHTML = bundleHtml;
                     showModal('bundleModal');
                 } else {
                     document.getElementById('paymentDetails').innerHTML = `
-                        <div style="text-align: center;">
+                        <div class="payment-detail-card">
                             <h3>${lecture.title}</h3>
-                            <div style="font-size: 48px; color: #2e8b57; font-weight: bold; margin: 20px 0;">${formatCurrency(lecture.price)}</div>
-                            <p>Get lifetime access to this NCLEX lecture</p>
+                            <div class="price-tag">${formatCurrency(lecture.price)}</div>
+                            <p>✓ Lifetime access</p>
+                            <p>✓ Study notes included</p>
+                            <p>✓ Mobile friendly</p>
                         </div>
                     `;
                     showModal('paymentModal');
@@ -755,9 +404,11 @@
                         const remaining = allLectures.filter(l => l.lecture_number > 2 && !userPurchases.includes(l.id)).length;
                         if (remaining > 0 && confirm(`🎉 Special offer! Unlock remaining ${remaining} lectures for ${formatCurrency(60)}?`)) {
                             const bundleHtml = `
-                                <p style="margin: 20px 0;">Unlock ALL remaining ${remaining} lectures for only</p>
-                                <div style="font-size: 48px; color: #2e8b57; font-weight: bold;">${formatCurrency(60)}</div>
-                                <button class="btn btn-success" onclick="purchaseBundle()" style="width: 100%; padding: 14px;">Unlock Everything →</button>
+                                <div class="bundle-offer">
+                                    <p>Unlock ALL remaining ${remaining} lectures for only</p>
+                                    <div class="bundle-price">${formatCurrency(60)}</div>
+                                    <button class="btn btn-success btn-bundle" onclick="purchaseBundle()">🚀 Unlock Everything →</button>
+                                </div>
                             `;
                             document.getElementById('bundleDetails').innerHTML = bundleHtml;
                             showModal('bundleModal');
@@ -766,7 +417,7 @@
                 }
             }
             
-            // Watch lecture
+            // Watch Lecture
             window.watchLecture = async function(lectureId) {
                 const lecture = allLectures.find(l => l.id === lectureId);
                 if (!lecture) return;
@@ -776,13 +427,13 @@
                     return;
                 }
                 
-                document.getElementById('videoHeader').innerHTML = `<h2>${lecture.title}</h2><p style="color: #64748b;">${lecture.duration || '2 hours'} • ${getMonthName(lecture.month)}</p>`;
+                document.getElementById('videoHeader').innerHTML = `<h2><i class="fas fa-video"></i> ${lecture.title}</h2><p>${lecture.duration || '2 hours'} • ${getMonthName(lecture.month)}</p>`;
                 document.getElementById('videoContainer').innerHTML = `<iframe src="${lecture.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'}" frameborder="0" allowfullscreen></iframe>`;
-                document.getElementById('videoNotes').innerHTML = `<strong>📚 Study Notes:</strong><br>${lecture.study_notes || 'Complete NCLEX study guide with practice questions and detailed rationales.'}`;
+                document.getElementById('videoNotes').innerHTML = `<strong><i class="fas fa-sticky-note"></i> Study Notes:</strong><br>${lecture.study_notes || 'Complete NCLEX study guide with practice questions and detailed rationales.'}`;
                 showModal('videoModal');
             };
             
-            // Render lectures
+            // Render Lectures
             async function renderLectures() {
                 if (!allLectures.length) await loadLectures();
                 
@@ -793,7 +444,7 @@
                 
                 const grid = document.getElementById('lecturesGrid');
                 if (!filtered.length) {
-                    grid.innerHTML = '<div style="text-align: center; padding: 50px; color: white;">No lectures found</div>';
+                    grid.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>No lectures found</p></div>';
                     return;
                 }
                 
@@ -816,18 +467,18 @@
                             ${badge}
                             <div class="lecture-number">Lecture ${lecture.lecture_number} • ${getMonthName(lecture.month)}</div>
                             <div class="lecture-title">${lecture.title}</div>
-                            <div class="lecture-duration">⏱️ ${lecture.duration || '2 hours'}</div>
+                            <div class="lecture-duration"><i class="far fa-clock"></i> ${lecture.duration || '2 hours'}</div>
                             ${priceHtml}
                             ${canAccess ? 
-                                `<button class="watch-btn" onclick="watchLecture(${lecture.id})">🎥 Watch Lecture</button>` : 
-                                `<button class="unlock-btn" onclick='unlockLecture(${JSON.stringify(lecture).replace(/'/g, "&#39;")})'>🔓 Unlock ${formatCurrency(lecture.price)}</button>`
+                                `<button class="watch-btn" onclick="watchLecture(${lecture.id})"><i class="fas fa-play"></i> Watch Lecture</button>` : 
+                                `<button class="unlock-btn" onclick='unlockLecture(${JSON.stringify(lecture).replace(/'/g, "&#39;")})'><i class="fas fa-key"></i> Unlock ${formatCurrency(lecture.price)}</button>`
                             }
                         </div>
                     `;
                 }).join('');
             }
             
-            // Update stats
+            // Update Statistics
             async function updateStats() {
                 if (!currentUser) return;
                 
@@ -838,13 +489,22 @@
                 document.getElementById('purchasedCount').innerHTML = purchasedCount;
                 document.getElementById('remainingLectures').innerHTML = remaining;
                 document.getElementById('progressPercent').innerHTML = `${percent}%`;
+                document.getElementById('progressPercentLabel').innerHTML = `${percent}% Complete`;
                 document.getElementById('progressBar').style.width = `${percent}%`;
                 
                 const { data: profile } = await supabase.from('profiles').select('total_spent').eq('id', currentUser.id).single();
                 document.getElementById('totalSpent').innerHTML = formatCurrency(profile?.total_spent || 0);
+                
+                if (percent === 100) {
+                    document.getElementById('progressDetailText').innerHTML = '🏆 Amazing! You\'ve completed the entire NCLEX course! Ready for the exam!';
+                } else if (percent > 50) {
+                    document.getElementById('progressDetailText').innerHTML = '🔥 Excellent progress! You\'re more than halfway there!';
+                } else if (percent > 0) {
+                    document.getElementById('progressDetailText').innerHTML = '📚 Keep going! Every lecture brings you closer to becoming an RN.';
+                }
             }
             
-            // Filter functions
+            // Filter Functions
             function filterLectures(filter) {
                 currentFilter = filter;
                 document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -859,13 +519,13 @@
                 renderLectures();
             }
             
-            // Attach filter events
+            // Event Listeners
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.onclick = () => filterLectures(btn.getAttribute('data-filter'));
             });
             document.getElementById('monthFilter').onchange = filterByMonth;
             
-            // Initialize dashboard
+            // Initialize Dashboard
             async function initDashboard() {
                 await checkAuth();
                 await loadLectures();
@@ -875,8 +535,7 @@
             }
             
             initDashboard();
-            
-        });
+        })();
     </script>
 </body>
 </html>
