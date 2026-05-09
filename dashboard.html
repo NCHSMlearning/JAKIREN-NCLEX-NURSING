@@ -29,23 +29,23 @@
             </div>
             
             <nav class="sidebar-nav">
-                <a href="#" class="nav-item active">
+                <a href="#" class="nav-item active" data-tab="dashboard">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item" data-tab="lectures">
                     <i class="fas fa-book-open"></i>
                     <span>My Lectures</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item" data-tab="progress">
                     <i class="fas fa-chart-line"></i>
                     <span>Progress</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item" data-tab="certificates">
                     <i class="fas fa-certificate"></i>
                     <span>Certificates</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item" data-tab="support">
                     <i class="fas fa-headset"></i>
                     <span>Support</span>
                 </a>
@@ -71,8 +71,8 @@
             <!-- Top Header Bar -->
             <div class="top-bar">
                 <div class="page-title">
-                    <h1><i class="fas fa-graduation-cap"></i> Nursing Dashboard</h1>
-                    <p>Track your NCLEX journey to success</p>
+                    <h1 id="pageMainTitle"><i class="fas fa-graduation-cap"></i> Nursing Dashboard</h1>
+                    <p id="pageSubtitle">Track your NCLEX journey to success</p>
                 </div>
                 <div class="top-actions">
                     <div class="notification-badge">
@@ -85,99 +85,11 @@
                 </div>
             </div>
 
-            <!-- Welcome Banner -->
-            <div class="welcome-banner">
-                <div class="welcome-text">
-                    <h2>Welcome back, <span id="welcomeName">Nurse</span>! 👋</h2>
-                    <p>Continue your NCLEX journey. You're making great progress toward becoming a registered nurse!</p>
-                    <div class="motivation-tag">⭐ 180 Lectures • 6 Months Premium Access</div>
-                </div>
-                <div class="streak-badge">
-                    <i class="fas fa-calendar-week"></i>
-                    <div class="streak-number">🔥</div>
-                    <small>NCLEX Ready</small>
-                </div>
-            </div>
-
-            <!-- Statistics Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon-wrapper"><i class="fas fa-lock-open"></i></div>
-                    <div class="stat-number" id="purchasedCount">0</div>
-                    <div class="stat-label">Lectures Unlocked</div>
-                    <div class="stat-trend positive"><i class="fas fa-arrow-up"></i> +12% this week</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon-wrapper"><i class="fas fa-coins"></i></div>
-                    <div class="stat-number" id="totalSpent">KES 0</div>
-                    <div class="stat-label">Total Investment</div>
-                    <div class="stat-trend">Lifetime access</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon-wrapper"><i class="fas fa-hourglass-half"></i></div>
-                    <div class="stat-number" id="remainingLectures">180</div>
-                    <div class="stat-label">Remaining Lectures</div>
-                    <div class="stat-trend">Keep pushing!</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon-wrapper"><i class="fas fa-chart-line"></i></div>
-                    <div class="stat-number" id="progressPercent">0%</div>
-                    <div class="stat-label">Overall Progress</div>
-                    <div class="progress-ring" id="progressRing"></div>
-                </div>
-            </div>
-
-            <!-- Detailed Progress Section -->
-            <div class="progress-section">
-                <div class="progress-header">
-                    <div class="progress-label"><i class="fas fa-chart-simple"></i> Course Completion Tracker</div>
-                    <div class="progress-value" id="progressPercentLabel">0% Complete</div>
-                </div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar-fill" id="progressBar"></div>
-                </div>
-                <div class="progress-details">
-                    <span id="progressDetailText">🎯 Unlock more lectures to advance your NCLEX prep</span>
-                </div>
-            </div>
-
-            <!-- Featured Topics (NCLEX Focus Areas) -->
-            <div class="featured-section">
-                <h3><i class="fas fa-bullseye"></i> NCLEX Exam Focus Areas</h3>
-                <div class="featured-grid">
-                    <div class="featured-item"><i class="fas fa-capsules"></i> Pharmacology</div>
-                    <div class="featured-item"><i class="fas fa-stethoscope"></i> Medical-Surgical</div>
-                    <div class="featured-item"><i class="fas fa-baby-carriage"></i> Maternity Nursing</div>
-                    <div class="featured-item"><i class="fas fa-child"></i> Pediatric Nursing</div>
-                    <div class="featured-item"><i class="fas fa-brain"></i> Psychiatric Nursing</div>
-                    <div class="featured-item"><i class="fas fa-gavel"></i> Legal & Ethics</div>
-                    <div class="featured-item"><i class="fas fa-lungs"></i> Respiratory</div>
-                    <div class="featured-item"><i class="fas fa-heartbeat"></i> Cardiovascular</div>
-                </div>
-            </div>
-
-            <!-- Filter Bar -->
-            <div class="filter-bar">
-                <div class="filter-buttons">
-                    <button class="filter-btn active" data-filter="all"><i class="fas fa-list"></i> All</button>
-                    <button class="filter-btn" data-filter="unlocked"><i class="fas fa-check-circle"></i> Unlocked</button>
-                    <button class="filter-btn" data-filter="locked"><i class="fas fa-lock"></i> Locked</button>
-                </div>
-                <select id="monthFilter" class="month-select">
-                    <option value="all">📅 All Months</option>
-                    <option value="1">📘 Month 1: Fundamentals</option>
-                    <option value="2">💉 Month 2: Medical-Surgical</option>
-                    <option value="3">💊 Month 3: Pharmacology</option>
-                    <option value="4">🤰 Month 4: Maternity & Pediatrics</option>
-                    <option value="5">🧠 Month 5: Psychiatric Nursing</option>
-                    <option value="6">⭐ Month 6: Final Review</option>
-                </select>
-            </div>
-
-            <!-- Lectures Grid -->
-            <div class="lectures-grid" id="lecturesGrid">
+            <!-- Dynamic Content Container -->
+            <div id="dynamicContent">
+                <!-- Dashboard content loads here -->
                 <div class="loading-state">
-                    <i class="fas fa-spinner fa-pulse"></i> Loading premium lectures...
+                    <i class="fas fa-spinner fa-pulse"></i> Loading dashboard...
                 </div>
             </div>
         </main>
@@ -193,10 +105,10 @@
             </div>
             <div id="paymentDetails"></div>
             <div class="payment-actions">
-                <button class="payment-btn btn-mpesa" onclick="processMpesaPayment()">
+                <button class="payment-btn btn-mpesa" id="mpesaPayBtn">
                     <i class="fas fa-mobile-alt"></i> M-Pesa (STK Push)
                 </button>
-                <button class="payment-btn btn-card" onclick="processCardPayment()">
+                <button class="payment-btn btn-card" id="cardPayBtn">
                     <i class="fab fa-cc-visa"></i> Card / PayPal
                 </button>
             </div>
@@ -244,6 +156,7 @@
             let currentFilter = 'all';
             let currentMonth = 'all';
             let pendingLecture = null;
+            let currentTab = 'dashboard';
             
             // Helper Functions
             function showToast(message, isError = false) {
@@ -255,11 +168,13 @@
             }
             
             function showModal(modalId) {
-                document.getElementById(modalId).style.display = 'flex';
+                const modal = document.getElementById(modalId);
+                if (modal) modal.style.display = 'flex';
             }
             
             window.closeModal = function(modalId) {
-                document.getElementById(modalId).style.display = 'none';
+                const modal = document.getElementById(modalId);
+                if (modal) modal.style.display = 'none';
             };
             
             function formatCurrency(amount) {
@@ -287,7 +202,6 @@
                 }
                 currentUser = user;
                 const displayName = user.user_metadata?.full_name || user.email.split('@')[0];
-                document.getElementById('welcomeName').innerHTML = displayName;
                 document.getElementById('welcomeNameShort').innerHTML = displayName;
                 document.getElementById('sidebarUserName').innerHTML = displayName;
                 document.getElementById('userAvatar').innerHTML = displayName.charAt(0).toUpperCase();
@@ -298,8 +212,6 @@
                 await supabase.auth.signOut();
                 window.location.href = 'login.html';
             };
-            
-            document.getElementById('logoutBtn').onclick = () => window.logout();
             
             // Data Loading
             async function loadLectures() {
@@ -315,134 +227,142 @@
                 return userPurchases;
             }
             
-            // Payment Handlers
-            window.unlockLecture = async function(lecture) {
-                if (!currentUser) return;
-                if (userPurchases.includes(lecture.id)) {
-                    showToast('Lecture already unlocked!');
-                    return;
-                }
-                pendingLecture = lecture;
+            // ============ RENDER DASHBOARD VIEW ============
+            async function renderDashboard() {
+                const contentDiv = document.getElementById('dynamicContent');
+                if (!contentDiv) return;
                 
-                if (lecture.lecture_number === 2) {
-                    const remaining = allLectures.filter(l => l.lecture_number > 2 && !userPurchases.includes(l.id)).length;
-                    const bundleHtml = `
-                        <div class="bundle-offer">
-                            <i class="fas fa-rocket"></i>
-                            <p>Unlock ALL remaining <strong>${remaining}</strong> lectures for only</p>
-                            <div class="bundle-price">${formatCurrency(60)}</div>
-                            <p class="bundle-note">Less than KES 1 per lecture!</p>
-                            <button class="btn btn-success btn-bundle" onclick="purchaseBundle()">🎯 Unlock Everything Now</button>
+                contentDiv.innerHTML = `
+                    <!-- Welcome Banner -->
+                    <div class="welcome-banner">
+                        <div class="welcome-text">
+                            <h2>Welcome back, <span id="welcomeName">${currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'Nurse'}</span>! 👋</h2>
+                            <p>Continue your NCLEX journey. You're making great progress toward becoming a registered nurse!</p>
+                            <div class="motivation-tag">⭐ 180 Lectures • 6 Months Premium Access</div>
                         </div>
-                    `;
-                    document.getElementById('bundleDetails').innerHTML = bundleHtml;
-                    showModal('bundleModal');
-                } else {
-                    document.getElementById('paymentDetails').innerHTML = `
-                        <div class="payment-detail-card">
-                            <h3>${lecture.title}</h3>
-                            <div class="price-tag">${formatCurrency(lecture.price)}</div>
-                            <p>✓ Lifetime access</p>
-                            <p>✓ Study notes included</p>
-                            <p>✓ Mobile friendly</p>
+                        <div class="streak-badge">
+                            <i class="fas fa-calendar-week"></i>
+                            <div class="streak-number">🔥</div>
+                            <small>NCLEX Ready</small>
                         </div>
-                    `;
-                    showModal('paymentModal');
-                }
-            };
-            
-            window.processMpesaPayment = async function() {
-                if (!pendingLecture) return;
-                showToast('📱 M-Pesa STK Push sent to your phone');
-                setTimeout(async () => {
-                    await completePurchase(pendingLecture, 'mpesa');
-                    closeModal('paymentModal');
-                    pendingLecture = null;
-                }, 2000);
-            };
-            
-            window.processCardPayment = async function() {
-                if (!pendingLecture) return;
-                showToast('💳 Redirecting to secure payment gateway...');
-                setTimeout(async () => {
-                    await completePurchase(pendingLecture, 'card');
-                    closeModal('paymentModal');
-                    pendingLecture = null;
-                }, 1500);
-            };
-            
-            window.purchaseBundle = async function() {
-                if (!currentUser) return;
-                showToast('Processing bundle purchase...');
+                    </div>
+
+                    <!-- Statistics Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper"><i class="fas fa-lock-open"></i></div>
+                            <div class="stat-number" id="purchasedCount">0</div>
+                            <div class="stat-label">Lectures Unlocked</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper"><i class="fas fa-coins"></i></div>
+                            <div class="stat-number" id="totalSpent">KES 0</div>
+                            <div class="stat-label">Total Investment</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper"><i class="fas fa-hourglass-half"></i></div>
+                            <div class="stat-number" id="remainingLectures">180</div>
+                            <div class="stat-label">Remaining Lectures</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper"><i class="fas fa-chart-line"></i></div>
+                            <div class="stat-number" id="progressPercent">0%</div>
+                            <div class="stat-label">Overall Progress</div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Progress Section -->
+                    <div class="progress-section">
+                        <div class="progress-header">
+                            <div class="progress-label"><i class="fas fa-chart-simple"></i> Course Completion Tracker</div>
+                            <div class="progress-value" id="progressPercentLabel">0% Complete</div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" id="progressBar"></div>
+                        </div>
+                        <div class="progress-details">
+                            <span id="progressDetailText">🎯 Unlock more lectures to advance your NCLEX prep</span>
+                        </div>
+                    </div>
+
+                    <!-- Featured Topics (NCLEX Focus Areas) -->
+                    <div class="featured-section">
+                        <h3><i class="fas fa-bullseye"></i> NCLEX Exam Focus Areas</h3>
+                        <div class="featured-grid">
+                            <div class="featured-item"><i class="fas fa-capsules"></i> Pharmacology</div>
+                            <div class="featured-item"><i class="fas fa-stethoscope"></i> Medical-Surgical</div>
+                            <div class="featured-item"><i class="fas fa-baby-carriage"></i> Maternity Nursing</div>
+                            <div class="featured-item"><i class="fas fa-child"></i> Pediatric Nursing</div>
+                            <div class="featured-item"><i class="fas fa-brain"></i> Psychiatric Nursing</div>
+                            <div class="featured-item"><i class="fas fa-gavel"></i> Legal & Ethics</div>
+                            <div class="featured-item"><i class="fas fa-lungs"></i> Respiratory</div>
+                            <div class="featured-item"><i class="fas fa-heartbeat"></i> Cardiovascular</div>
+                        </div>
+                    </div>
+                `;
                 
-                const locked = allLectures.filter(l => l.lecture_number > 2 && !userPurchases.includes(l.id));
-                for (const l of locked) {
-                    await supabase.from('user_purchases').insert([{ user_id: currentUser.id, lecture_id: l.id, amount_paid: 0 }]);
-                }
-                
-                const { data: profile } = await supabase.from('profiles').select('total_spent').eq('id', currentUser.id).single();
-                await supabase.from('profiles').update({ total_spent: (profile?.total_spent || 0) + 60 }).eq('id', currentUser.id);
-                
-                showToast('🎉 Bundle unlocked! You have access to ALL lectures!');
-                closeModal('bundleModal');
-                await loadUserPurchases();
-                await renderLectures();
-                updateStats();
-            };
-            
-            async function completePurchase(lecture, method) {
-                await supabase.from('user_purchases').insert([{ user_id: currentUser.id, lecture_id: lecture.id, amount_paid: lecture.price }]);
-                const { data: profile } = await supabase.from('profiles').select('total_spent').eq('id', currentUser.id).single();
-                await supabase.from('profiles').update({ total_spent: (profile?.total_spent || 0) + lecture.price }).eq('id', currentUser.id);
-                showToast(`✅ Successfully unlocked: ${lecture.title}`);
-                await loadUserPurchases();
-                await renderLectures();
-                updateStats();
-                
-                if (lecture.lecture_number === 2) {
-                    setTimeout(() => {
-                        const remaining = allLectures.filter(l => l.lecture_number > 2 && !userPurchases.includes(l.id)).length;
-                        if (remaining > 0 && confirm(`🎉 Special offer! Unlock remaining ${remaining} lectures for ${formatCurrency(60)}?`)) {
-                            const bundleHtml = `
-                                <div class="bundle-offer">
-                                    <p>Unlock ALL remaining ${remaining} lectures for only</p>
-                                    <div class="bundle-price">${formatCurrency(60)}</div>
-                                    <button class="btn btn-success btn-bundle" onclick="purchaseBundle()">🚀 Unlock Everything →</button>
-                                </div>
-                            `;
-                            document.getElementById('bundleDetails').innerHTML = bundleHtml;
-                            showModal('bundleModal');
-                        }
-                    }, 1000);
-                }
+                await updateStats();
             }
             
-            // Watch Lecture
-            window.watchLecture = async function(lectureId) {
-                const lecture = allLectures.find(l => l.id === lectureId);
-                if (!lecture) return;
-                
-                if (!userPurchases.includes(lecture.id) && !lecture.is_free) {
-                    showToast('Please purchase this lecture first', true);
-                    return;
-                }
-                
-                document.getElementById('videoHeader').innerHTML = `<h2><i class="fas fa-video"></i> ${lecture.title}</h2><p>${lecture.duration || '2 hours'} • ${getMonthName(lecture.month)}</p>`;
-                document.getElementById('videoContainer').innerHTML = `<iframe src="${lecture.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'}" frameborder="0" allowfullscreen></iframe>`;
-                document.getElementById('videoNotes').innerHTML = `<strong><i class="fas fa-sticky-note"></i> Study Notes:</strong><br>${lecture.study_notes || 'Complete NCLEX study guide with practice questions and detailed rationales.'}`;
-                showModal('videoModal');
-            };
-            
-            // Render Lectures
+            // ============ RENDER LECTURES VIEW ============
             async function renderLectures() {
+                const contentDiv = document.getElementById('dynamicContent');
+                if (!contentDiv) return;
+                
+                // Create lectures UI
+                contentDiv.innerHTML = `
+                    <div class="filter-bar">
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="all"><i class="fas fa-list"></i> All</button>
+                            <button class="filter-btn" data-filter="unlocked"><i class="fas fa-check-circle"></i> Unlocked</button>
+                            <button class="filter-btn" data-filter="locked"><i class="fas fa-lock"></i> Locked</button>
+                        </div>
+                        <select id="monthFilter" class="month-select">
+                            <option value="all">📅 All Months</option>
+                            <option value="1">📘 Month 1: Fundamentals</option>
+                            <option value="2">💉 Month 2: Medical-Surgical</option>
+                            <option value="3">💊 Month 3: Pharmacology</option>
+                            <option value="4">🤰 Month 4: Maternity & Pediatrics</option>
+                            <option value="5">🧠 Month 5: Psychiatric Nursing</option>
+                            <option value="6">⭐ Month 6: Final Review</option>
+                        </select>
+                    </div>
+                    <div class="lectures-grid" id="lecturesGrid">
+                        <div class="loading-state"><i class="fas fa-spinner fa-pulse"></i> Loading lectures...</div>
+                    </div>
+                `;
+                
+                // Load data if needed
                 if (!allLectures.length) await loadLectures();
+                if (!userPurchases.length && currentUser) await loadUserPurchases();
+                
+                // Render lectures grid
+                await renderLecturesGrid();
+                
+                // Attach filter events
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        currentFilter = btn.getAttribute('data-filter');
+                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        renderLecturesGrid();
+                    };
+                });
+                document.getElementById('monthFilter').onchange = () => {
+                    currentMonth = document.getElementById('monthFilter').value;
+                    renderLecturesGrid();
+                };
+            }
+            
+            async function renderLecturesGrid() {
+                const grid = document.getElementById('lecturesGrid');
+                if (!grid) return;
                 
                 let filtered = [...allLectures];
                 if (currentMonth !== 'all') filtered = filtered.filter(l => l.month === parseInt(currentMonth));
                 if (currentFilter === 'unlocked') filtered = filtered.filter(l => userPurchases.includes(l.id));
                 if (currentFilter === 'locked') filtered = filtered.filter(l => !userPurchases.includes(l.id) && !l.is_free);
                 
-                const grid = document.getElementById('lecturesGrid');
                 if (!filtered.length) {
                     grid.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>No lectures found</p></div>';
                     return;
@@ -470,13 +390,238 @@
                             <div class="lecture-duration"><i class="far fa-clock"></i> ${lecture.duration || '2 hours'}</div>
                             ${priceHtml}
                             ${canAccess ? 
-                                `<button class="watch-btn" onclick="watchLecture(${lecture.id})"><i class="fas fa-play"></i> Watch Lecture</button>` : 
-                                `<button class="unlock-btn" onclick='unlockLecture(${JSON.stringify(lecture).replace(/'/g, "&#39;")})'><i class="fas fa-key"></i> Unlock ${formatCurrency(lecture.price)}</button>`
+                                `<button class="watch-btn" onclick="window.watchLecture(${lecture.id})"><i class="fas fa-play"></i> Watch Lecture</button>` : 
+                                `<button class="unlock-btn" onclick='window.initiateUnlock(${JSON.stringify(lecture).replace(/'/g, "&#39;")})'><i class="fas fa-key"></i> Unlock ${formatCurrency(lecture.price)}</button>`
                             }
                         </div>
                     `;
                 }).join('');
             }
+            
+            // ============ RENDER PROGRESS VIEW ============
+            async function renderProgress() {
+                const contentDiv = document.getElementById('dynamicContent');
+                if (!contentDiv) return;
+                
+                const purchasedCount = userPurchases.length;
+                const totalLectures = allLectures.length || 180;
+                const percentComplete = Math.round((purchasedCount / totalLectures) * 100);
+                
+                // Calculate progress by month
+                let monthsHtml = '';
+                for (let i = 1; i <= 6; i++) {
+                    const monthLectures = allLectures.filter(l => l.month === i);
+                    const monthUnlocked = monthLectures.filter(l => userPurchases.includes(l.id)).length;
+                    const monthPercent = monthLectures.length > 0 ? Math.round((monthUnlocked / monthLectures.length) * 100) : 0;
+                    monthsHtml += `
+                        <div style="margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <span><strong>${getMonthName(i)}</strong></span>
+                                <span>${monthUnlocked}/${monthLectures.length} lectures (${monthPercent}%)</span>
+                            </div>
+                            <div class="progress-bar-container" style="height: 10px;">
+                                <div class="progress-bar-fill" style="width: ${monthPercent}%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light));"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                contentDiv.innerHTML = `
+                    <div class="progress-overview" style="background: white; border-radius: 24px; padding: 28px; margin-bottom: 24px;">
+                        <h2><i class="fas fa-chart-line"></i> Your NCLEX Progress</h2>
+                        <div class="progress-header" style="margin: 20px 0 10px;">
+                            <span class="progress-label">Overall Course Completion</span>
+                            <span class="progress-value">${percentComplete}%</span>
+                        </div>
+                        <div class="progress-bar-container" style="height: 20px;">
+                            <div class="progress-bar-fill" style="width: ${percentComplete}%; height: 100%;"></div>
+                        </div>
+                        <p style="margin-top: 16px; color: var(--gray);">
+                            <i class="fas fa-check-circle" style="color: var(--success);"></i> 
+                            ${purchasedCount} of ${totalLectures} lectures completed
+                        </p>
+                    </div>
+                    
+                    <div class="stats-grid" style="margin-bottom: 24px;">
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper"><i class="fas fa-clock"></i></div>
+                            <div class="stat-number">${Math.floor(purchasedCount * 2)} hrs</div>
+                            <div class="stat-label">Study Time</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper"><i class="fas fa-fire"></i></div>
+                            <div class="stat-number">${Math.floor(percentComplete / 10)}</div>
+                            <div class="stat-label">Day Streak</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper"><i class="fas fa-trophy"></i></div>
+                            <div class="stat-number">${Math.floor(percentComplete / 20)}</div>
+                            <div class="stat-label">Achievements</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; border-radius: 24px; padding: 28px;">
+                        <h3><i class="fas fa-chart-simple"></i> Progress by Month</h3>
+                        <div style="margin-top: 20px;">${monthsHtml}</div>
+                    </div>
+                `;
+            }
+            
+            // ============ RENDER CERTIFICATES VIEW ============
+            async function renderCertificates() {
+                const contentDiv = document.getElementById('dynamicContent');
+                if (!contentDiv) return;
+                
+                const purchasedCount = userPurchases.length;
+                const totalLectures = allLectures.length || 180;
+                const percentComplete = Math.round((purchasedCount / totalLectures) * 100);
+                const isComplete = percentComplete === 100;
+                
+                contentDiv.innerHTML = `
+                    <div style="background: white; border-radius: 24px; padding: 28px; margin-bottom: 24px; text-align: center;">
+                        <i class="fas fa-certificate" style="font-size: 64px; color: var(--primary); margin-bottom: 16px;"></i>
+                        <h2>Your Achievement Certificates</h2>
+                        <p style="color: var(--gray);">Complete milestones to earn certificates and badges</p>
+                    </div>
+                    
+                    ${isComplete ? `
+                        <div style="background: linear-gradient(135deg, var(--success), var(--success-light)); border-radius: 24px; padding: 32px; margin-bottom: 24px; text-align: center; color: white;">
+                            <i class="fas fa-trophy" style="font-size: 48px; margin-bottom: 16px;"></i>
+                            <h2 style="color: white;">🎉 NCLEX Master Certificate 🎉</h2>
+                            <p>Congratulations! You've completed all ${totalLectures} lectures!</p>
+                            <button class="btn btn-primary" style="margin-top: 16px; background: white; color: var(--success);" onclick="alert('Certificate download feature coming soon!')">
+                                <i class="fas fa-download"></i> Download Certificate
+                            </button>
+                        </div>
+                    ` : `
+                        <div style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 24px; padding: 28px; margin-bottom: 24px; color: white;">
+                            <h3>Progress to Certificate</h3>
+                            <div class="progress-bar-container" style="margin: 16px 0;">
+                                <div class="progress-bar-fill" style="width: ${percentComplete}%;"></div>
+                            </div>
+                            <p>Complete ${totalLectures - purchasedCount} more lectures to earn your NCLEX Master Certificate!</p>
+                        </div>
+                    `}
+                `;
+            }
+            
+            // ============ RENDER SUPPORT VIEW ============
+            async function renderSupport() {
+                const contentDiv = document.getElementById('dynamicContent');
+                if (!contentDiv) return;
+                
+                contentDiv.innerHTML = `
+                    <div style="background: white; border-radius: 24px; padding: 32px; margin-bottom: 24px; text-align: center;">
+                        <i class="fas fa-headset" style="font-size: 64px; color: var(--primary); margin-bottom: 16px;"></i>
+                        <h2>Support Center</h2>
+                        <p style="color: var(--gray);">We're here to help you succeed in your NCLEX journey</p>
+                    </div>
+                    
+                    <div class="stats-grid" style="margin-bottom: 24px;">
+                        <div class="stat-card" style="cursor: pointer;" onclick="window.location.href='mailto:support@jakiren.com'">
+                            <i class="fas fa-envelope" style="font-size: 32px; color: var(--primary);"></i>
+                            <div class="stat-label">Email Support</div>
+                            <small>support@jakiren.com</small>
+                        </div>
+                        <div class="stat-card" style="cursor: pointer;" onclick="window.open('https://wa.me/254700000000')">
+                            <i class="fab fa-whatsapp" style="font-size: 32px; color: #25D366;"></i>
+                            <div class="stat-label">WhatsApp</div>
+                            <small>+254 700 000 000</small>
+                        </div>
+                        <div class="stat-card" style="cursor: pointer;" onclick="window.location.href='tel:+254700000000'">
+                            <i class="fas fa-phone" style="font-size: 32px; color: var(--primary);"></i>
+                            <div class="stat-label">Call Us</div>
+                            <small>+254 700 000 000</small>
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; border-radius: 24px; padding: 28px;">
+                        <h3><i class="fas fa-question-circle"></i> Frequently Asked Questions</h3>
+                        ${[
+                            { q: "How do I access purchased lectures?", a: "After purchase, lectures are automatically unlocked. Click 'My Lectures' in the sidebar to see all unlocked lectures." },
+                            { q: "How long do I have access to lectures?", a: "Lifetime access! Once you purchase a lecture or bundle, you have unlimited access forever." },
+                            { q: "What payment methods are accepted?", a: "We accept M-Pesa (STK Push), Credit/Debit Cards, and PayPal. All payments are secure." },
+                            { q: "Can I get a refund?", a: "We offer a 7-day money-back guarantee for bundle purchases. Individual lectures are non-refundable once accessed." },
+                            { q: "How do I get my certificate?", a: "Complete all 180 lectures to unlock the NCLEX Master Certificate from the Certificates tab." }
+                        ].map((faq, i) => `
+                            <div style="border-bottom: 1px solid var(--light-gray); padding: 16px 0;">
+                                <strong><i class="fas fa-question-circle" style="color: var(--primary); margin-right: 10px;"></i> ${faq.q}</strong>
+                                <p style="margin-top: 8px; color: var(--gray);">${faq.a}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            // ============ PAYMENT HANDLERS ============
+            window.initiateUnlock = async function(lecture) {
+                if (!currentUser) return;
+                if (userPurchases.includes(lecture.id)) {
+                    showToast('Lecture already unlocked!');
+                    return;
+                }
+                pendingLecture = lecture;
+                
+                document.getElementById('paymentDetails').innerHTML = `
+                    <div class="payment-detail-card" style="text-align: center;">
+                        <h3>${lecture.title}</h3>
+                        <div class="price-tag" style="font-size: 36px;">${formatCurrency(lecture.price)}</div>
+                        <p>✓ Lifetime access</p>
+                        <p>✓ Study notes included</p>
+                    </div>
+                `;
+                showModal('paymentModal');
+            };
+            
+            window.processMpesaPayment = async function() {
+                if (!pendingLecture) return;
+                showToast('📱 M-Pesa STK Push sent to your phone');
+                setTimeout(async () => {
+                    await completePurchase(pendingLecture);
+                    closeModal('paymentModal');
+                    pendingLecture = null;
+                }, 2000);
+            };
+            
+            window.processCardPayment = async function() {
+                if (!pendingLecture) return;
+                showToast('💳 Redirecting to secure payment gateway...');
+                setTimeout(async () => {
+                    await completePurchase(pendingLecture);
+                    closeModal('paymentModal');
+                    pendingLecture = null;
+                }, 1500);
+            };
+            
+            async function completePurchase(lecture) {
+                await supabase.from('user_purchases').insert([{ user_id: currentUser.id, lecture_id: lecture.id, amount_paid: lecture.price }]);
+                const { data: profile } = await supabase.from('profiles').select('total_spent').eq('id', currentUser.id).single();
+                await supabase.from('profiles').update({ total_spent: (profile?.total_spent || 0) + lecture.price }).eq('id', currentUser.id);
+                showToast(`✅ Successfully unlocked: ${lecture.title}`);
+                await loadUserPurchases();
+                
+                if (currentTab === 'lectures') {
+                    await renderLecturesGrid();
+                } else if (currentTab === 'dashboard') {
+                    await updateStats();
+                }
+                await updateStats();
+            }
+            
+            window.watchLecture = async function(lectureId) {
+                const lecture = allLectures.find(l => l.id === lectureId);
+                if (!lecture) return;
+                
+                if (!userPurchases.includes(lecture.id) && !lecture.is_free) {
+                    showToast('Please purchase this lecture first', true);
+                    return;
+                }
+                
+                document.getElementById('videoHeader').innerHTML = `<h2><i class="fas fa-video"></i> ${lecture.title}</h2><p>${lecture.duration || '2 hours'} • ${getMonthName(lecture.month)}</p>`;
+                document.getElementById('videoContainer').innerHTML = `<iframe src="${lecture.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'}" frameborder="0" allowfullscreen></iframe>`;
+                document.getElementById('videoNotes').innerHTML = `<strong><i class="fas fa-sticky-note"></i> Study Notes:</strong><br>${lecture.study_notes || 'Complete NCLEX study guide with practice questions and detailed rationales.'}`;
+                showModal('videoModal');
+            };
             
             // Update Statistics
             async function updateStats() {
@@ -486,52 +631,109 @@
                 const remaining = 180 - purchasedCount;
                 const percent = Math.round((purchasedCount / 180) * 100);
                 
-                document.getElementById('purchasedCount').innerHTML = purchasedCount;
-                document.getElementById('remainingLectures').innerHTML = remaining;
-                document.getElementById('progressPercent').innerHTML = `${percent}%`;
-                document.getElementById('progressPercentLabel').innerHTML = `${percent}% Complete`;
-                document.getElementById('progressBar').style.width = `${percent}%`;
+                const purchasedEl = document.getElementById('purchasedCount');
+                const remainingEl = document.getElementById('remainingLectures');
+                const percentEl = document.getElementById('progressPercent');
+                const percentLabelEl = document.getElementById('progressPercentLabel');
+                const progressBarEl = document.getElementById('progressBar');
+                const progressDetailEl = document.getElementById('progressDetailText');
+                
+                if (purchasedEl) purchasedEl.innerHTML = purchasedCount;
+                if (remainingEl) remainingEl.innerHTML = remaining;
+                if (percentEl) percentEl.innerHTML = `${percent}%`;
+                if (percentLabelEl) percentLabelEl.innerHTML = `${percent}% Complete`;
+                if (progressBarEl) progressBarEl.style.width = `${percent}%`;
                 
                 const { data: profile } = await supabase.from('profiles').select('total_spent').eq('id', currentUser.id).single();
-                document.getElementById('totalSpent').innerHTML = formatCurrency(profile?.total_spent || 0);
+                const totalSpentEl = document.getElementById('totalSpent');
+                if (totalSpentEl) totalSpentEl.innerHTML = formatCurrency(profile?.total_spent || 0);
                 
-                if (percent === 100) {
-                    document.getElementById('progressDetailText').innerHTML = '🏆 Amazing! You\'ve completed the entire NCLEX course! Ready for the exam!';
-                } else if (percent > 50) {
-                    document.getElementById('progressDetailText').innerHTML = '🔥 Excellent progress! You\'re more than halfway there!';
-                } else if (percent > 0) {
-                    document.getElementById('progressDetailText').innerHTML = '📚 Keep going! Every lecture brings you closer to becoming an RN.';
+                if (progressDetailEl) {
+                    if (percent === 100) {
+                        progressDetailEl.innerHTML = '🏆 Amazing! You\'ve completed the entire NCLEX course! Ready for the exam!';
+                    } else if (percent > 50) {
+                        progressDetailEl.innerHTML = '🔥 Excellent progress! You\'re more than halfway there!';
+                    } else if (percent > 0) {
+                        progressDetailEl.innerHTML = '📚 Keep going! Every lecture brings you closer to becoming an RN.';
+                    }
                 }
             }
             
-            // Filter Functions
-            function filterLectures(filter) {
-                currentFilter = filter;
-                document.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                    if (btn.getAttribute('data-filter') === filter) btn.classList.add('active');
+            // Navigation Handler
+            function setupNavigation() {
+                const navItems = document.querySelectorAll('.nav-item');
+                const titles = {
+                    dashboard: { title: 'Nursing Dashboard', subtitle: 'Track your NCLEX journey to success', icon: 'fa-graduation-cap' },
+                    lectures: { title: 'My Lectures', subtitle: 'Access all your NCLEX course materials', icon: 'fa-book-open' },
+                    progress: { title: 'Progress Tracker', subtitle: 'Monitor your NCLEX preparation progress', icon: 'fa-chart-line' },
+                    certificates: { title: 'Certificates', subtitle: 'View and download your achievements', icon: 'fa-certificate' },
+                    support: { title: 'Support Center', subtitle: 'Get help with your NCLEX preparation', icon: 'fa-headset' }
+                };
+                
+                navItems.forEach(item => {
+                    item.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        const tab = item.getAttribute('data-tab');
+                        currentTab = tab;
+                        
+                        // Update active state
+                        navItems.forEach(nav => nav.classList.remove('active'));
+                        item.classList.add('active');
+                        
+                        // Update page title
+                        const titleData = titles[tab];
+                        const titleEl = document.getElementById('pageMainTitle');
+                        const subtitleEl = document.getElementById('pageSubtitle');
+                        if (titleEl) titleEl.innerHTML = `<i class="fas ${titleData.icon}"></i> ${titleData.title}`;
+                        if (subtitleEl) subtitleEl.textContent = titleData.subtitle;
+                        
+                        // Render appropriate view
+                        switch(tab) {
+                            case 'dashboard':
+                                await renderDashboard();
+                                break;
+                            case 'lectures':
+                                await renderLectures();
+                                break;
+                            case 'progress':
+                                await renderProgress();
+                                break;
+                            case 'certificates':
+                                await renderCertificates();
+                                break;
+                            case 'support':
+                                await renderSupport();
+                                break;
+                        }
+                    });
                 });
-                renderLectures();
             }
             
-            function filterByMonth() {
-                currentMonth = document.getElementById('monthFilter').value;
-                renderLectures();
+            // Attach payment button handlers
+            function attachPaymentHandlers() {
+                const mpesaBtn = document.getElementById('mpesaPayBtn');
+                const cardBtn = document.getElementById('cardPayBtn');
+                if (mpesaBtn) mpesaBtn.onclick = () => window.processMpesaPayment();
+                if (cardBtn) cardBtn.onclick = () => window.processCardPayment();
             }
-            
-            // Event Listeners
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.onclick = () => filterLectures(btn.getAttribute('data-filter'));
-            });
-            document.getElementById('monthFilter').onchange = filterByMonth;
             
             // Initialize Dashboard
             async function initDashboard() {
                 await checkAuth();
+                if (!currentUser) return;
+                
                 await loadLectures();
                 await loadUserPurchases();
-                await renderLectures();
-                await updateStats();
+                
+                setupNavigation();
+                attachPaymentHandlers();
+                
+                // Load initial dashboard
+                await renderDashboard();
+                
+                // Set logout handler
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) logoutBtn.onclick = () => window.logout();
             }
             
             initDashboard();
