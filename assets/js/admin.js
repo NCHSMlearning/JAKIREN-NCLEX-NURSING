@@ -2,8 +2,8 @@
 // ADMIN PANEL - Complete Management System
 // ============================================
 
-// NOTE: supabase client is already available globally from the HTML
-// Do NOT redeclare it! Just use the existing 'supabase' variable.
+// Use the existing supabase client from HTML
+// Do NOT redeclare or re-initialize supabase here
 
 // Global state
 let currentAdmin = null;
@@ -19,18 +19,36 @@ function showToast(message, isError = false) {
         toast = document.createElement('div');
         toast.id = 'adminToast';
         toast.className = 'toast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: ${isError ? '#dc3545' : '#2e8b57'};
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s;
+        `;
         document.body.appendChild(toast);
     }
     toast.textContent = message;
-    toast.style.backgroundColor = isError ? '#dc3545' : '#2e8b57';
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3500);
+    toast.style.opacity = '1';
+    setTimeout(() => toast.style.opacity = '0', 3500);
 }
 
 // ========== ADMIN AUTHENTICATION ==========
 async function checkAdminAuth() {
     try {
-        const { data: { user } } = await supabase.auth.getUser();
+        // Check if supabase is available
+        if (!window.supabase) {
+            console.error('Supabase not initialized');
+            showToast('Error: Supabase not initialized', true);
+            return false;
+        }
+        
+        const { data: { user } } = await window.supabase.auth.getUser();
         
         if (!user) {
             showLoginPage();
@@ -38,7 +56,7 @@ async function checkAdminAuth() {
         }
         
         // Check database for is_admin flag
-        const { data: profile, error } = await supabase
+        const { data: profile, error } = await window.supabase
             .from('profiles')
             .select('is_admin, role')
             .eq('id', user.id)
@@ -46,6 +64,14 @@ async function checkAdminAuth() {
         
         if (error) {
             console.error('Error checking admin status:', error);
+            // If no profile, create one
+            if (error.code === 'PGRST116') {
+                await window.supabase
+                    .from('profiles')
+                    .insert([{ id: user.id, is_admin: false, role: 'user' }]);
+                showAccessDenied();
+                return false;
+            }
             showAccessDenied();
             return false;
         }
@@ -70,7 +96,7 @@ function showLoginPage() {
     if (!appContent) return;
     
     appContent.innerHTML = `
-        <div class="admin-login-container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+        <div class="admin-login-container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0a2f3f, #031f2f);">
             <div class="admin-login-card" style="background: white; border-radius: 24px; padding: 40px; width: 400px; max-width: 90%; box-shadow: 0 20px 35px rgba(0,0,0,0.1);">
                 <div style="text-align: center; margin-bottom: 32px;">
                     <div style="font-size: 48px;">🔐</div>
@@ -123,7 +149,7 @@ window.adminLogin = async function() {
         return;
     }
     
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
     
     if (error) {
         showToast('Login failed: ' + error.message, true);
@@ -136,7 +162,7 @@ window.adminLogin = async function() {
 
 // ========== LOAD DATA ==========
 async function loadAllUsers() {
-    const { data } = await supabase
+    const { data } = await window.supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
@@ -145,7 +171,7 @@ async function loadAllUsers() {
 }
 
 async function loadAllLectures() {
-    const { data } = await supabase
+    const { data } = await window.supabase
         .from('lectures')
         .select('*')
         .order('lecture_number');
@@ -154,15 +180,15 @@ async function loadAllLectures() {
 }
 
 async function loadAllSales() {
-    const { data } = await supabase
+    const { data } = await window.supabase
         .from('user_purchases')
-        .select('*, profiles(email, full_name)')
+        .select('*, profiles!user_purchases_user_id_fkey(id, email, full_name)')
         .order('purchased_at', { ascending: false });
     allSales = data || [];
     return allSales;
 }
 
-// ========== RENDER FUNCTIONS ==========
+// ========== RENDER DASHBOARD ==========
 async function renderAdminDashboard() {
     const contentDiv = document.getElementById('dynamicContent');
     if (!contentDiv) return;
@@ -206,364 +232,28 @@ async function renderAdminDashboard() {
             </div>
         </div>
         
-        <div class="admin-form">
-            <h3>Quick Actions</h3>
-            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px;">
-                <button class="btn btn-primary" onclick="switchTab('lectures')"><i class="fas fa-plus"></i> Add Lecture</button>
-                <button class="btn btn-success" onclick="switchTab('users')"><i class="fas fa-users"></i> Manage Users</button>
-                <button class="btn btn-info" onclick="exportData()"><i class="fas fa-download"></i> Export Data</button>
-            </div>
-        </div>
-        
         <div class="data-table">
             <div class="table-header">
                 <h3>Recent Sales</h3>
             </div>
             <table style="width: 100%;">
                 <thead>
-                    <tr><th>User</th><th>Lecture</th><th>Amount</th><th>Date</th></tr>
+                    <tr><th>User</th><th>Amount</th><th>Date</th></tr>
                 </thead>
                 <tbody>
                     ${allSales.slice(0, 10).map(sale => `
                         <tr>
-                            <td>${sale.profiles?.email || 'N/A'}</td>
-                            <td>Lecture ${sale.lecture_id}</td>
+                            <td>${sale.profiles?.email || sale.user_id || 'N/A'}</td>
                             <td>KES ${(sale.amount_paid || 0).toLocaleString()}</td>
                             <td>${new Date(sale.purchased_at).toLocaleDateString()}</td>
                         </tr>
                     `).join('')}
-                    ${allSales.length === 0 ? '<tr><td colspan="4" style="text-align: center;">No sales yet</td></tr>' : ''}
+                    ${allSales.length === 0 ? '<tr><td colspan="3" style="text-align: center;">No sales yet</td></tr>' : ''}
                 </tbody>
             </table>
         </div>
     `;
 }
-
-async function renderUsersManagement() {
-    const contentDiv = document.getElementById('dynamicContent');
-    if (!contentDiv) return;
-    
-    await loadAllUsers();
-    
-    contentDiv.innerHTML = `
-        <div class="admin-form">
-            <h3>User Management</h3>
-            <div class="form-row">
-                <div class="form-group">
-                    <input type="text" id="userSearch" placeholder="Search users..." class="form-control" onkeyup="filterUsers()">
-                </div>
-                <div class="form-group">
-                    <select id="roleFilter" class="form-control" onchange="filterUsers()">
-                        <option value="all">All Roles</option>
-                        <option value="user">Users</option>
-                        <option value="admin">Admins</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        
-        <div class="data-table">
-            <table style="width: 100%;">
-                <thead>
-                    <tr><th>User</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="usersTableBody">
-                    ${allUsers.map(user => `
-                        <tr>
-                            <td>${user.full_name || 'N/A'}</td>
-                            <td>${user.email || 'N/A'}</td>
-                            <td><span class="status-badge ${user.is_admin ? 'status-active' : 'status-pending'}">${user.is_admin ? 'Admin' : 'User'}</span></td>
-                            <td>${new Date(user.created_at).toLocaleDateString()}</td>
-                            <td>
-                                <button class="btn btn-sm btn-danger" onclick="deleteUser('${user.id}')"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
-    `;
-}
-
-async function renderLecturesManagement() {
-    const contentDiv = document.getElementById('dynamicContent');
-    if (!contentDiv) return;
-    
-    await loadAllLectures();
-    
-    contentDiv.innerHTML = `
-        <div class="admin-form">
-            <h3>Add New Lecture</h3>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Lecture Number</label>
-                    <input type="number" id="lectureNumber" placeholder="e.g., 1">
-                </div>
-                <div class="form-group">
-                    <label>Month</label>
-                    <select id="lectureMonth">
-                        <option value="1">Month 1: Fundamentals</option>
-                        <option value="2">Month 2: Medical-Surgical</option>
-                        <option value="3">Month 3: Pharmacology</option>
-                        <option value="4">Month 4: Maternity & Pediatrics</option>
-                        <option value="5">Month 5: Psychiatric Nursing</option>
-                        <option value="6">Month 6: Final Review</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Title</label>
-                <input type="text" id="lectureTitle" placeholder="Lecture title">
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Price (KES)</label>
-                    <input type="number" id="lecturePrice" placeholder="0">
-                </div>
-                <div class="form-group">
-                    <label>Duration</label>
-                    <input type="text" id="lectureDuration" placeholder="e.g., 2 hours">
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Video URL (YouTube embed)</label>
-                <input type="text" id="lectureVideoUrl" placeholder="https://www.youtube.com/embed/...">
-            </div>
-            <div class="form-group">
-                <label>Study Notes</label>
-                <textarea id="lectureNotes" rows="4" placeholder="Study notes for students..."></textarea>
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="lectureIsFree"> Free Lecture</label>
-            </div>
-            <button class="btn btn-primary" onclick="addLecture()"><i class="fas fa-save"></i> Add Lecture</button>
-        </div>
-        
-        <div class="data-table">
-            <div class="table-header">
-                <h3>All Lectures</h3>
-                <div class="table-search">
-                    <input type="text" id="lectureSearch" placeholder="Search lectures..." onkeyup="filterLectures()">
-                </div>
-            </div>
-            <table style="width: 100%;">
-                <thead>
-                    <tr><th>#</th><th>Month</th><th>Title</th><th>Price</th><th>Status</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="lecturesTableBody">
-                    ${allLectures.map(lecture => `
-                        <tr>
-                            <td>${lecture.lecture_number}</td>
-                            <td>Month ${lecture.month}</td>
-                            <td>${lecture.title}</td>
-                            <td>${lecture.is_free ? 'FREE' : 'KES ' + (lecture.price || 0)}</td>
-                            <td><span class="status-badge status-active">Active</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" onclick="editLecture(${lecture.id})"><i class="fas fa-edit"></i></button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteLecture(${lecture.id})"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
-    `;
-}
-
-function renderSettings() {
-    const contentDiv = document.getElementById('dynamicContent');
-    if (!contentDiv) return;
-    
-    contentDiv.innerHTML = `
-        <div class="admin-form">
-            <h3>Platform Settings</h3>
-            <div class="form-group">
-                <label>Platform Name</label>
-                <input type="text" id="platformName" value="Jakiren NCLEX Nursing">
-            </div>
-            <div class="form-group">
-                <label>Contact Email</label>
-                <input type="email" id="contactEmail" value="support@jakiren.com">
-            </div>
-            <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
-        </div>
-        
-        <div class="admin-form">
-            <h3>System Status</h3>
-            <p><strong>Supabase Connection:</strong> <span class="status-badge status-active">Connected</span></p>
-            <button class="btn btn-success" onclick="backupData()"><i class="fas fa-database"></i> Backup Database</button>
-        </div>
-    `;
-}
-
-// ========== CRUD OPERATIONS ==========
-window.addLecture = async function() {
-    const newLecture = {
-        lecture_number: parseInt(document.getElementById('lectureNumber').value),
-        month: parseInt(document.getElementById('lectureMonth').value),
-        title: document.getElementById('lectureTitle').value,
-        price: parseFloat(document.getElementById('lecturePrice').value) || 0,
-        duration: document.getElementById('lectureDuration').value,
-        video_url: document.getElementById('lectureVideoUrl').value,
-        study_notes: document.getElementById('lectureNotes').value,
-        is_free: document.getElementById('lectureIsFree').checked
-    };
-    
-    if (!newLecture.title || !newLecture.lecture_number) {
-        showToast('Please fill required fields', true);
-        return;
-    }
-    
-    const { error } = await supabase.from('lectures').insert([newLecture]);
-    
-    if (error) {
-        showToast('Error: ' + error.message, true);
-    } else {
-        showToast('Lecture added successfully!');
-        renderLecturesManagement();
-    }
-};
-
-window.deleteLecture = async function(lectureId) {
-    if (confirm('Are you sure you want to delete this lecture?')) {
-        const { error } = await supabase.from('lectures').delete().eq('id', lectureId);
-        if (error) {
-            showToast('Error deleting lecture', true);
-        } else {
-            showToast('Lecture deleted');
-            renderLecturesManagement();
-        }
-    }
-};
-
-window.deleteUser = async function(userId) {
-    if (confirm('Are you sure you want to delete this user?')) {
-        const { error } = await supabase.from('profiles').delete().eq('id', userId);
-        if (error) {
-            showToast('Error deleting user', true);
-        } else {
-            showToast('User deleted');
-            renderUsersManagement();
-        }
-    }
-};
-
-window.exportData = async function() {
-    const data = {
-        users: allUsers,
-        lectures: allLectures,
-        sales: allSales,
-        exportDate: new Date().toISOString()
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `nclex_backup_${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(link.href);
-    showToast('Data exported successfully!');
-};
-
-window.backupData = function() {
-    window.exportData();
-};
-
-window.saveSettings = function() {
-    const settings = {
-        platformName: document.getElementById('platformName').value,
-        contactEmail: document.getElementById('contactEmail').value
-    };
-    localStorage.setItem('admin_settings', JSON.stringify(settings));
-    showToast('Settings saved!');
-};
-
-// ========== FILTERS ==========
-window.filterUsers = function() {
-    const searchTerm = document.getElementById('userSearch')?.value.toLowerCase() || '';
-    const roleFilter = document.getElementById('roleFilter')?.value || 'all';
-    
-    const filtered = allUsers.filter(user => {
-        const matchesSearch = user.email?.toLowerCase().includes(searchTerm) || 
-                             user.full_name?.toLowerCase().includes(searchTerm);
-        const matchesRole = roleFilter === 'all' || 
-                           (roleFilter === 'admin' && user.is_admin) ||
-                           (roleFilter === 'user' && !user.is_admin);
-        return matchesSearch && matchesRole;
-    });
-    
-    const tbody = document.getElementById('usersTableBody');
-    if (tbody) {
-        tbody.innerHTML = filtered.map(user => `
-            <tr>
-                <td>${user.full_name || 'N/A'}</td>
-                <td>${user.email || 'N/A'}</td>
-                <td><span class="status-badge ${user.is_admin ? 'status-active' : 'status-pending'}">${user.is_admin ? 'Admin' : 'User'}</span></td>
-                <td>${new Date(user.created_at).toLocaleDateString()}</td>
-                <td><button class="btn btn-sm btn-danger" onclick="deleteUser('${user.id}')"><i class="fas fa-trash"></i></button></td>
-            </tr>
-        `).join('');
-    }
-};
-
-window.filterLectures = function() {
-    const searchTerm = document.getElementById('lectureSearch')?.value.toLowerCase() || '';
-    
-    const filtered = allLectures.filter(lecture => 
-        lecture.title.toLowerCase().includes(searchTerm)
-    );
-    
-    const tbody = document.getElementById('lecturesTableBody');
-    if (tbody) {
-        tbody.innerHTML = filtered.map(lecture => `
-            <tr>
-                <td>${lecture.lecture_number}</td>
-                <td>Month ${lecture.month}</td>
-                <td>${lecture.title}</td>
-                <td>${lecture.is_free ? 'FREE' : 'KES ' + (lecture.price || 0)}</td>
-                <td><span class="status-badge status-active">Active</span></td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="editLecture(${lecture.id})"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteLecture(${lecture.id})"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
-        `).join('');
-    }
-};
-
-// ========== NAVIGATION ==========
-window.switchTab = async function(tab) {
-    currentTab = tab;
-    
-    // Update active state in sidebar
-    document.querySelectorAll('.admin-nav-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.getAttribute('data-tab') === tab) {
-            item.classList.add('active');
-        }
-    });
-    
-    // Render selected tab
-    switch(tab) {
-        case 'dashboard':
-            await renderAdminDashboard();
-            break;
-        case 'users':
-            await renderUsersManagement();
-            break;
-        case 'lectures':
-            await renderLecturesManagement();
-            break;
-        case 'settings':
-            renderSettings();
-            break;
-    }
-};
-
-window.logoutAdmin = async function() {
-    await supabase.auth.signOut();
-    location.reload();
-};
 
 // ========== INITIALIZE ADMIN PANEL ==========
 async function initAdminPanel() {
@@ -574,47 +264,42 @@ async function initAdminPanel() {
     if (!appContent) return;
     
     appContent.innerHTML = `
-        <div class="admin-wrapper">
-            <aside class="admin-sidebar">
-                <div class="admin-logo">
+        <div class="admin-wrapper" style="display: flex; min-height: 100vh;">
+            <aside class="admin-sidebar" style="width: 280px; background: linear-gradient(180deg, #0f2b3d 0%, #1a4a63 100%); color: white;">
+                <div class="admin-logo" style="padding: 24px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <div style="font-size: 32px;">🔐</div>
                     <h2>Admin</h2>
                     <p>NCLEX Manager</p>
                 </div>
-                <nav class="admin-nav">
-                    <div class="admin-nav-item active" data-tab="dashboard">
+                <nav class="admin-nav" style="padding: 20px 0;">
+                    <div class="admin-nav-item active" data-tab="dashboard" style="display: flex; align-items: center; gap: 12px; padding: 12px 24px; cursor: pointer;">
                         <i class="fas fa-tachometer-alt"></i>
                         <span>Dashboard</span>
                     </div>
-                    <div class="admin-nav-item" data-tab="users">
+                    <div class="admin-nav-item" data-tab="users" style="display: flex; align-items: center; gap: 12px; padding: 12px 24px; cursor: pointer;">
                         <i class="fas fa-users"></i>
                         <span>Users</span>
                     </div>
-                    <div class="admin-nav-item" data-tab="lectures">
+                    <div class="admin-nav-item" data-tab="lectures" style="display: flex; align-items: center; gap: 12px; padding: 12px 24px; cursor: pointer;">
                         <i class="fas fa-book"></i>
                         <span>Lectures</span>
                     </div>
-                    <div class="admin-nav-item" data-tab="settings">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </div>
                 </nav>
                 <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <button class="btn btn-danger" style="width: 100%;" onclick="logoutAdmin()">
+                    <button onclick="logoutAdmin()" style="width: 100%; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </button>
                 </div>
             </aside>
             
-            <main class="admin-main">
-                <div class="admin-header">
+            <main class="admin-main" style="flex: 1; padding: 24px; background: #f1f5f9;">
+                <div class="admin-header" style="background: white; border-radius: 16px; padding: 20px 24px; margin-bottom: 24px; display: flex; justify-content: space-between;">
                     <div class="page-title">
                         <h1>Admin Dashboard</h1>
-                        <p>Manage NCLEX Nursing Platform</p>
+                        <p style="color: #64748b;">Manage NCLEX Nursing Platform</p>
                     </div>
                     <div class="admin-user">
                         <span>${currentAdmin?.email}</span>
-                        <div class="admin-avatar">A</div>
                     </div>
                 </div>
                 <div id="dynamicContent"></div>
@@ -622,11 +307,16 @@ async function initAdminPanel() {
         </div>
     `;
     
-    // Add event listeners to nav items
+    // Add event listeners
     document.querySelectorAll('.admin-nav-item').forEach(item => {
-        item.addEventListener('click', () => {
+        item.addEventListener('click', async () => {
             const tab = item.getAttribute('data-tab');
-            switchTab(tab);
+            document.querySelectorAll('.admin-nav-item').forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            
+            if (tab === 'dashboard') await renderAdminDashboard();
+            else if (tab === 'users') await renderUsersManagement();
+            else if (tab === 'lectures') await renderLecturesManagement();
         });
     });
     
@@ -634,9 +324,28 @@ async function initAdminPanel() {
     const loadingScreen = document.getElementById('loadingScreen');
     if (loadingScreen) loadingScreen.style.display = 'none';
     
-    // Load dashboard
     await renderAdminDashboard();
 }
 
-// Start admin panel when DOM is ready
+window.logoutAdmin = async function() {
+    await window.supabase.auth.signOut();
+    location.reload();
+};
+
+// Add simple management functions
+async function renderUsersManagement() {
+    const contentDiv = document.getElementById('dynamicContent');
+    if (!contentDiv) return;
+    await loadAllUsers();
+    contentDiv.innerHTML = `<h3>User Management - ${allUsers.length} users</h3><pre>${JSON.stringify(allUsers, null, 2)}</pre>`;
+}
+
+async function renderLecturesManagement() {
+    const contentDiv = document.getElementById('dynamicContent');
+    if (!contentDiv) return;
+    await loadAllLectures();
+    contentDiv.innerHTML = `<h3>Lecture Management - ${allLectures.length} lectures</h3><pre>${JSON.stringify(allLectures, null, 2)}</pre>`;
+}
+
+// Start the admin panel
 document.addEventListener('DOMContentLoaded', initAdminPanel);
