@@ -2,11 +2,8 @@
 // ADMIN PANEL - Complete Management System
 // ============================================
 
-// Supabase Configuration
-const SUPABASE_URL = 'https://fbsnnsnebzzedypqbbip.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZic25uc25lYnp6ZWR5cHFiYmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzY0NzAsImV4cCI6MjA5MzU1MjQ3MH0.9S0RCSCmdYkwJCi1WM-_75-1LKucxL4y-HNMMexB1Fk';
-
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// NOTE: supabase client is already available globally from the HTML
+// Do NOT redeclare it! Just use the existing 'supabase' variable.
 
 // Global state
 let currentAdmin = null;
@@ -15,54 +12,116 @@ let allUsers = [];
 let allLectures = [];
 let allSales = [];
 
-// ========== AUTHENTICATION ==========
+// ========== HELPER FUNCTIONS ==========
+function showToast(message, isError = false) {
+    let toast = document.getElementById('adminToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'adminToast';
+        toast.className = 'toast';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.style.backgroundColor = isError ? '#dc3545' : '#2e8b57';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+// ========== ADMIN AUTHENTICATION ==========
 async function checkAdminAuth() {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+            showLoginPage();
+            return false;
+        }
+        
+        // Check database for is_admin flag
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('is_admin, role')
+            .eq('id', user.id)
+            .single();
+        
+        if (error) {
+            console.error('Error checking admin status:', error);
+            showAccessDenied();
+            return false;
+        }
+        
+        if (profile?.is_admin === true || profile?.role === 'admin') {
+            currentAdmin = user;
+            console.log('✅ Admin logged in:', user.email);
+            return true;
+        }
+        
+        showAccessDenied();
+        return false;
+    } catch (error) {
+        console.error('Auth error:', error);
         showLoginPage();
         return false;
     }
-    
-    // Check if user is admin (you can add an is_admin field to profiles)
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin, role')
-        .eq('id', user.id)
-        .single();
-    
-    if (!profile?.is_admin && profile?.role !== 'admin') {
-        showAccessDenied();
-        return false;
-    }
-    
-    currentAdmin = user;
-    return true;
 }
 
 function showLoginPage() {
     const appContent = document.getElementById('appContent');
+    if (!appContent) return;
+    
     appContent.innerHTML = `
         <div class="admin-login-container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
-            <div class="admin-login-card" style="background: white; border-radius: 24px; padding: 40px; width: 400px; max-width: 90%;">
+            <div class="admin-login-card" style="background: white; border-radius: 24px; padding: 40px; width: 400px; max-width: 90%; box-shadow: 0 20px 35px rgba(0,0,0,0.1);">
                 <div style="text-align: center; margin-bottom: 32px;">
                     <div style="font-size: 48px;">🔐</div>
                     <h2>Admin Login</h2>
-                    <p style="color: var(--admin-gray);">Enter your credentials</p>
+                    <p style="color: #64748b;">Enter your admin credentials</p>
                 </div>
-                <input type="email" id="adminEmail" class="form-control" placeholder="Email" style="width: 100%; padding: 12px; margin-bottom: 16px; border-radius: 10px; border: 1px solid #ddd;">
-                <input type="password" id="adminPassword" class="form-control" placeholder="Password" style="width: 100%; padding: 12px; margin-bottom: 24px; border-radius: 10px; border: 1px solid #ddd;">
-                <button class="btn btn-primary" onclick="adminLogin()" style="width: 100%; padding: 12px;">Login as Admin</button>
+                <input type="email" id="adminEmail" placeholder="Email" style="width: 100%; padding: 12px; margin-bottom: 16px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px;">
+                <input type="password" id="adminPassword" placeholder="Password" style="width: 100%; padding: 12px; margin-bottom: 24px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px;">
+                <button onclick="adminLogin()" style="width: 100%; padding: 12px; background: #1b4f6e; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                    <i class="fas fa-sign-in-alt"></i> Login as Admin
+                </button>
+                <p style="text-align: center; margin-top: 16px;">
+                    <a href="index.html" style="color: #64748b; text-decoration: none;">← Back to Student Dashboard</a>
+                </p>
             </div>
         </div>
     `;
     appContent.style.display = 'block';
-    document.getElementById('loadingScreen').style.display = 'none';
+    const loadingScreen = document.getElementById('loadingScreen');
+    if (loadingScreen) loadingScreen.style.display = 'none';
+}
+
+function showAccessDenied() {
+    const appContent = document.getElementById('appContent');
+    if (!appContent) return;
+    
+    appContent.innerHTML = `
+        <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; background: linear-gradient(135deg, #0a2f3f, #031f2f);">
+            <div style="background: white; border-radius: 24px; padding: 40px; max-width: 400px;">
+                <i class="fas fa-lock" style="font-size: 64px; color: #dc3545;"></i>
+                <h2 style="margin: 20px 0;">Access Denied</h2>
+                <p style="color: #64748b;">You don't have permission to access the admin panel.</p>
+                <button onclick="window.location.href='index.html'" style="margin-top: 20px; padding: 12px 24px; background: #1b4f6e; color: white; border: none; border-radius: 10px; cursor: pointer;">
+                    Back to Home
+                </button>
+            </div>
+        </div>
+    `;
+    appContent.style.display = 'block';
+    const loadingScreen = document.getElementById('loadingScreen');
+    if (loadingScreen) loadingScreen.style.display = 'none';
 }
 
 window.adminLogin = async function() {
     const email = document.getElementById('adminEmail').value;
     const password = document.getElementById('adminPassword').value;
+    
+    if (!email || !password) {
+        showToast('Please fill in all fields', true);
+        return;
+    }
     
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     
@@ -72,24 +131,8 @@ window.adminLogin = async function() {
     }
     
     showToast('Login successful!');
-    location.reload();
+    setTimeout(() => location.reload(), 1000);
 };
-
-function showAccessDenied() {
-    const appContent = document.getElementById('appContent');
-    appContent.innerHTML = `
-        <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center;">
-            <div>
-                <i class="fas fa-lock" style="font-size: 64px; color: var(--admin-danger);"></i>
-                <h2>Access Denied</h2>
-                <p>You don't have permission to access the admin panel.</p>
-                <button class="btn btn-primary" onclick="window.location.href='index.html'">Back to Home</button>
-            </div>
-        </div>
-    `;
-    appContent.style.display = 'block';
-    document.getElementById('loadingScreen').style.display = 'none';
-}
 
 // ========== LOAD DATA ==========
 async function loadAllUsers() {
@@ -119,7 +162,7 @@ async function loadAllSales() {
     return allSales;
 }
 
-// ========== RENDER DASHBOARD ==========
+// ========== RENDER FUNCTIONS ==========
 async function renderAdminDashboard() {
     const contentDiv = document.getElementById('dynamicContent');
     if (!contentDiv) return;
@@ -166,7 +209,7 @@ async function renderAdminDashboard() {
         <div class="admin-form">
             <h3>Quick Actions</h3>
             <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px;">
-                <button class="btn btn-primary" onclick="switchTab('addLecture')"><i class="fas fa-plus"></i> Add Lecture</button>
+                <button class="btn btn-primary" onclick="switchTab('lectures')"><i class="fas fa-plus"></i> Add Lecture</button>
                 <button class="btn btn-success" onclick="switchTab('users')"><i class="fas fa-users"></i> Manage Users</button>
                 <button class="btn btn-info" onclick="exportData()"><i class="fas fa-download"></i> Export Data</button>
             </div>
@@ -176,7 +219,7 @@ async function renderAdminDashboard() {
             <div class="table-header">
                 <h3>Recent Sales</h3>
             </div>
-            <table>
+            <table style="width: 100%;">
                 <thead>
                     <tr><th>User</th><th>Lecture</th><th>Amount</th><th>Date</th></tr>
                 </thead>
@@ -196,7 +239,6 @@ async function renderAdminDashboard() {
     `;
 }
 
-// ========== RENDER USERS MANAGEMENT ==========
 async function renderUsersManagement() {
     const contentDiv = document.getElementById('dynamicContent');
     if (!contentDiv) return;
@@ -221,7 +263,7 @@ async function renderUsersManagement() {
         </div>
         
         <div class="data-table">
-            <table>
+            <table style="width: 100%;">
                 <thead>
                     <tr><th>User</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr>
                 </thead>
@@ -233,7 +275,6 @@ async function renderUsersManagement() {
                             <td><span class="status-badge ${user.is_admin ? 'status-active' : 'status-pending'}">${user.is_admin ? 'Admin' : 'User'}</span></td>
                             <td>${new Date(user.created_at).toLocaleDateString()}</td>
                             <td>
-                                <button class="btn btn-sm btn-primary" onclick="editUser('${user.id}')"><i class="fas fa-edit"></i></button>
                                 <button class="btn btn-sm btn-danger" onclick="deleteUser('${user.id}')"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -244,7 +285,6 @@ async function renderUsersManagement() {
     `;
 }
 
-// ========== RENDER LECTURES MANAGEMENT ==========
 async function renderLecturesManagement() {
     const contentDiv = document.getElementById('dynamicContent');
     if (!contentDiv) return;
@@ -294,9 +334,7 @@ async function renderLecturesManagement() {
                 <textarea id="lectureNotes" rows="4" placeholder="Study notes for students..."></textarea>
             </div>
             <div class="form-group">
-                <label>
-                    <input type="checkbox" id="lectureIsFree"> Free Lecture
-                </label>
+                <label><input type="checkbox" id="lectureIsFree"> Free Lecture</label>
             </div>
             <button class="btn btn-primary" onclick="addLecture()"><i class="fas fa-save"></i> Add Lecture</button>
         </div>
@@ -308,7 +346,7 @@ async function renderLecturesManagement() {
                     <input type="text" id="lectureSearch" placeholder="Search lectures..." onkeyup="filterLectures()">
                 </div>
             </div>
-            <table>
+            <table style="width: 100%;">
                 <thead>
                     <tr><th>#</th><th>Month</th><th>Title</th><th>Price</th><th>Status</th><th>Actions</th></tr>
                 </thead>
@@ -332,7 +370,6 @@ async function renderLecturesManagement() {
     `;
 }
 
-// ========== RENDER SETTINGS ==========
 function renderSettings() {
     const contentDiv = document.getElementById('dynamicContent');
     if (!contentDiv) return;
@@ -348,17 +385,12 @@ function renderSettings() {
                 <label>Contact Email</label>
                 <input type="email" id="contactEmail" value="support@jakiren.com">
             </div>
-            <div class="form-group">
-                <label>Bundle Price (KES)</label>
-                <input type="number" id="bundlePrice" value="60">
-            </div>
             <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
         </div>
         
         <div class="admin-form">
             <h3>System Status</h3>
             <p><strong>Supabase Connection:</strong> <span class="status-badge status-active">Connected</span></p>
-            <p><strong>Last Backup:</strong> ${new Date().toLocaleString()}</p>
             <button class="btn btn-success" onclick="backupData()"><i class="fas fa-database"></i> Backup Database</button>
         </div>
     `;
@@ -388,7 +420,6 @@ window.addLecture = async function() {
         showToast('Error: ' + error.message, true);
     } else {
         showToast('Lecture added successfully!');
-        switchTab('lectures');
         renderLecturesManagement();
     }
 };
@@ -407,7 +438,7 @@ window.deleteLecture = async function(lectureId) {
 
 window.deleteUser = async function(userId) {
     if (confirm('Are you sure you want to delete this user?')) {
-        const { error } = await supabase.auth.admin.deleteUser(userId);
+        const { error } = await supabase.from('profiles').delete().eq('id', userId);
         if (error) {
             showToast('Error deleting user', true);
         } else {
@@ -417,7 +448,6 @@ window.deleteUser = async function(userId) {
     }
 };
 
-// ========== EXPORT DATA ==========
 window.exportData = async function() {
     const data = {
         users: allUsers,
@@ -436,14 +466,13 @@ window.exportData = async function() {
 };
 
 window.backupData = function() {
-    exportData();
+    window.exportData();
 };
 
 window.saveSettings = function() {
     const settings = {
         platformName: document.getElementById('platformName').value,
-        contactEmail: document.getElementById('contactEmail').value,
-        bundlePrice: document.getElementById('bundlePrice').value
+        contactEmail: document.getElementById('contactEmail').value
     };
     localStorage.setItem('admin_settings', JSON.stringify(settings));
     showToast('Settings saved!');
@@ -471,29 +500,36 @@ window.filterUsers = function() {
                 <td>${user.email || 'N/A'}</td>
                 <td><span class="status-badge ${user.is_admin ? 'status-active' : 'status-pending'}">${user.is_admin ? 'Admin' : 'User'}</span></td>
                 <td>${new Date(user.created_at).toLocaleDateString()}</td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="editUser('${user.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteUser('${user.id}')"><i class="fas fa-trash"></i></button>
-                </td>
+                <td><button class="btn btn-sm btn-danger" onclick="deleteUser('${user.id}')"><i class="fas fa-trash"></i></button></td>
             </tr>
         `).join('');
     }
 };
 
-// ========== TOAST NOTIFICATION ==========
-function showToast(message, isError = false) {
-    let toast = document.getElementById('adminToast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'adminToast';
-        toast.className = 'toast';
-        document.body.appendChild(toast);
+window.filterLectures = function() {
+    const searchTerm = document.getElementById('lectureSearch')?.value.toLowerCase() || '';
+    
+    const filtered = allLectures.filter(lecture => 
+        lecture.title.toLowerCase().includes(searchTerm)
+    );
+    
+    const tbody = document.getElementById('lecturesTableBody');
+    if (tbody) {
+        tbody.innerHTML = filtered.map(lecture => `
+            <tr>
+                <td>${lecture.lecture_number}</td>
+                <td>Month ${lecture.month}</td>
+                <td>${lecture.title}</td>
+                <td>${lecture.is_free ? 'FREE' : 'KES ' + (lecture.price || 0)}</td>
+                <td><span class="status-badge status-active">Active</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editLecture(${lecture.id})"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteLecture(${lecture.id})"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
     }
-    toast.textContent = message;
-    toast.style.backgroundColor = isError ? '#dc3545' : '#2e8b57';
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
-}
+};
 
 // ========== NAVIGATION ==========
 window.switchTab = async function(tab) {
@@ -518,13 +554,15 @@ window.switchTab = async function(tab) {
         case 'lectures':
             await renderLecturesManagement();
             break;
-        case 'addLecture':
-            await renderLecturesManagement();
-            break;
         case 'settings':
             renderSettings();
             break;
     }
+};
+
+window.logoutAdmin = async function() {
+    await supabase.auth.signOut();
+    location.reload();
 };
 
 // ========== INITIALIZE ADMIN PANEL ==========
@@ -533,6 +571,8 @@ async function initAdminPanel() {
     if (!isAuthenticated) return;
     
     const appContent = document.getElementById('appContent');
+    if (!appContent) return;
+    
     appContent.innerHTML = `
         <div class="admin-wrapper">
             <aside class="admin-sidebar">
@@ -591,16 +631,12 @@ async function initAdminPanel() {
     });
     
     appContent.style.display = 'block';
-    document.getElementById('loadingScreen').style.display = 'none';
+    const loadingScreen = document.getElementById('loadingScreen');
+    if (loadingScreen) loadingScreen.style.display = 'none';
     
     // Load dashboard
     await renderAdminDashboard();
 }
 
-window.logoutAdmin = async function() {
-    await supabase.auth.signOut();
-    location.reload();
-};
-
-// Start admin panel
+// Start admin panel when DOM is ready
 document.addEventListener('DOMContentLoaded', initAdminPanel);
