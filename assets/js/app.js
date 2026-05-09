@@ -663,7 +663,204 @@ async function renderSupportView() {
         </div>
     `;
 }
+// ========== THEME TOGGLE ==========
+function initThemeToggle() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.setAttribute('data-theme', savedTheme);
+    
+    // Add theme toggle button to top bar
+    const topActions = document.querySelector('.top-actions');
+    if (topActions && !document.querySelector('.theme-toggle')) {
+        const themeBtn = document.createElement('button');
+        themeBtn.className = 'theme-toggle';
+        themeBtn.innerHTML = savedTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        themeBtn.onclick = () => {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            themeBtn.innerHTML = newTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            showToast(`${newTheme === 'dark' ? '🌙 Dark' : '☀️ Light'} mode activated`);
+        };
+        topActions.insertBefore(themeBtn, topActions.firstChild);
+    }
+}
 
+// ========== STUDY TIMER ==========
+let timerInterval = null;
+let timerSeconds = 25 * 60;
+
+function renderStudyTimer() {
+    return `
+        <div class="study-timer">
+            <h3><i class="fas fa-hourglass-half"></i> Study Timer</h3>
+            <div class="timer-display" id="timerDisplay">25:00</div>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button class="btn btn-primary" onclick="startStudyTimer()"><i class="fas fa-play"></i> Start</button>
+                <button class="btn btn-warning" onclick="pauseStudyTimer()"><i class="fas fa-pause"></i> Pause</button>
+                <button class="btn btn-danger" onclick="resetStudyTimer()"><i class="fas fa-stop"></i> Reset</button>
+            </div>
+            <p style="margin-top: 12px; color: var(--gray); font-size: 12px;">25 min focused study session</p>
+        </div>
+    `;
+}
+
+window.startStudyTimer = function() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        if (timerSeconds <= 0) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            showToast('🎉 Study session complete! Take a 5-minute break!');
+            playNotificationSound();
+            // Auto-reset to 25:00
+            timerSeconds = 25 * 60;
+            updateTimerDisplay();
+        } else {
+            timerSeconds--;
+            updateTimerDisplay();
+        }
+    }, 1000);
+};
+
+window.pauseStudyTimer = function() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        showToast('⏸️ Timer paused');
+    }
+};
+
+window.resetStudyTimer = function() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    timerSeconds = 25 * 60;
+    updateTimerDisplay();
+    showToast('🔄 Timer reset to 25:00');
+};
+
+function updateTimerDisplay() {
+    const minutes = Math.floor(timerSeconds / 60);
+    const seconds = timerSeconds % 60;
+    const display = document.getElementById('timerDisplay');
+    if (display) {
+        display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+}
+
+function playNotificationSound() {
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.frequency.value = 880;
+        gainNode.gain.value = 0.2;
+        oscillator.start();
+        setTimeout(() => {
+            oscillator.stop();
+            audioContext.close();
+        }, 500);
+    } catch(e) { console.log('Sound not supported'); }
+}
+
+// ========== KEYBOARD SHORTCUTS ==========
+function initKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + D -> Dashboard
+        if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+            e.preventDefault();
+            document.querySelector('[data-tab="dashboard"]')?.click();
+            showToast('📊 Dashboard (Ctrl+D)');
+        }
+        // Ctrl/Cmd + L -> Lectures
+        if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+            e.preventDefault();
+            document.querySelector('[data-tab="lectures"]')?.click();
+            showToast('📚 Lectures (Ctrl+L)');
+        }
+        // Ctrl/Cmd + P -> Progress
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            e.preventDefault();
+            document.querySelector('[data-tab="progress"]')?.click();
+            showToast('📈 Progress (Ctrl+P)');
+        }
+        // Ctrl/Cmd + C -> Certificates
+        if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+            e.preventDefault();
+            document.querySelector('[data-tab="certificates"]')?.click();
+            showToast('🏆 Certificates (Ctrl+C)');
+        }
+        // Esc -> Close any open modal
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal').forEach(modal => {
+                if (modal.style.display === 'flex') {
+                    modal.style.display = 'none';
+                    showToast('Modal closed');
+                }
+            });
+        }
+        // ? -> Show shortcuts help
+        if (e.key === '?') {
+            showShortcutsHelp();
+        }
+    });
+}
+
+function showShortcutsHelp() {
+    const shortcuts = `
+        ⌨️ Keyboard Shortcuts:
+        • Ctrl/Cmd + D → Dashboard
+        • Ctrl/Cmd + L → My Lectures
+        • Ctrl/Cmd + P → Progress
+        • Ctrl/Cmd + C → Certificates
+        • ESC → Close modal
+        • ? → Show this help
+    `;
+    alert(shortcuts);
+}
+
+// ========== STUDY STREAK TRACKING ==========
+async function updateStudyStreak() {
+    const user = await getCurrentUser();
+    if (!user) return;
+    
+    const today = new Date().toDateString();
+    const lastStudyKey = `last_study_${user.id}`;
+    const streakKey = `streak_${user.id}`;
+    const lastStudy = localStorage.getItem(lastStudyKey);
+    
+    if (lastStudy !== today) {
+        let streak = parseInt(localStorage.getItem(streakKey) || '0');
+        
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        if (lastStudy === yesterday.toDateString()) {
+            streak++;
+        } else if (lastStudy !== today) {
+            streak = 1;
+        }
+        
+        localStorage.setItem(streakKey, streak.toString());
+        localStorage.setItem(lastStudyKey, today);
+        
+        // Show motivational message
+        if (streak === 7) {
+            showToast('🔥 7-day streak! You\'re on fire!');
+        } else if (streak === 30) {
+            showToast('🏆 Amazing! 30-day streak!');
+        }
+    }
+}
+
+// Call this when user watches a lecture
+window.recordStudyActivity = async function() {
+    await updateStudyStreak();
+};
 // Helper Functions
 function getMonthName(month) {
     const months = {
