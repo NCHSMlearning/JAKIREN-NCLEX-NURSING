@@ -1,50 +1,85 @@
 // ============================================
-// SUPPORT MODULE - Help & Contact
+// PROGRESS MODULE - Detailed Analytics
 // ============================================
 
-// Render support view
-async function renderSupportView() {
-    console.log('🎧 Rendering support view...');
+// Render detailed progress view
+async function renderProgressView() {
+    console.log('📊 Rendering progress view...');
     
     const contentDiv = document.getElementById('dynamicContent');
     if (!contentDiv) return;
     
+    // Ensure data is loaded
+    if (window.allLectures && window.allLectures.length === 0) {
+        await window.loadLectures();
+    }
+    if (window.userPurchases && window.userPurchases.length === 0) {
+        await window.loadUserPurchases();
+    }
+    
+    const totalLectures = window.allLectures?.length || 180;
+    const unlockedCount = window.userPurchases?.length || 0;
+    const percentComplete = Math.round((unlockedCount / totalLectures) * 100);
+    
+    // Calculate progress by month
+    const monthsData = [];
+    for (let i = 1; i <= 6; i++) {
+        const monthLectures = window.allLectures?.filter(l => l.month === i) || [];
+        const monthUnlocked = monthLectures.filter(l => window.userPurchases?.includes(l.id)).length;
+        const monthPercent = monthLectures.length > 0 ? Math.round((monthUnlocked / monthLectures.length) * 100) : 0;
+        monthsData.push({ month: i, total: monthLectures.length, unlocked: monthUnlocked, percent: monthPercent });
+    }
+    
     contentDiv.innerHTML = `
-        <div style="background: white; border-radius: 24px; padding: 32px; margin-bottom: 24px; text-align: center;">
-            <i class="fas fa-headset" style="font-size: 64px; color: var(--primary); margin-bottom: 16px;"></i>
-            <h2>Support Center</h2>
-            <p style="color: var(--gray);">We're here to help you succeed in your NCLEX journey</p>
+        <div class="progress-overview" style="background: white; border-radius: 24px; padding: 28px; margin-bottom: 24px;">
+            <h2><i class="fas fa-chart-line"></i> Your NCLEX Progress</h2>
+            <div class="progress-header" style="margin: 20px 0 10px;">
+                <span class="progress-label">Overall Course Completion</span>
+                <span class="progress-value">${percentComplete}%</span>
+            </div>
+            <div class="progress-bar-container" style="height: 20px;">
+                <div class="progress-bar-fill" style="width: ${percentComplete}%; height: 100%;"></div>
+            </div>
+            <p style="margin-top: 16px; color: var(--gray);">
+                <i class="fas fa-check-circle" style="color: var(--success);"></i> 
+                ${unlockedCount} of ${totalLectures} lectures completed
+            </p>
         </div>
         
         <div class="stats-grid" style="margin-bottom: 24px;">
-            <div class="stat-card" onclick="showContactForm('email')" style="cursor: pointer;">
-                <i class="fas fa-envelope" style="font-size: 32px; color: var(--primary);"></i>
-                <div class="stat-label">Email Support</div>
-                <small>support@jakiren.com</small>
+            <div class="stat-card">
+                <div class="stat-icon-wrapper"><i class="fas fa-clock"></i></div>
+                <div class="stat-number">${Math.floor(unlockedCount * 2)} hrs</div>
+                <div class="stat-label">Study Time</div>
             </div>
-            <div class="stat-card" onclick="showContactForm('whatsapp')" style="cursor: pointer;">
-                <i class="fab fa-whatsapp" style="font-size: 32px; color: #25D366;"></i>
-                <div class="stat-label">WhatsApp</div>
-                <small>+254 700 000 000</small>
+            <div class="stat-card">
+                <div class="stat-icon-wrapper"><i class="fas fa-fire"></i></div>
+                <div class="stat-number">${Math.floor(percentComplete / 10)}</div>
+                <div class="stat-label">Day Streak</div>
             </div>
-            <div class="stat-card" onclick="showContactForm('phone')" style="cursor: pointer;">
-                <i class="fas fa-phone" style="font-size: 32px; color: var(--primary);"></i>
-                <div class="stat-label">Call Us</div>
-                <small>+254 700 000 000</small>
+            <div class="stat-card">
+                <div class="stat-icon-wrapper"><i class="fas fa-trophy"></i></div>
+                <div class="stat-number">${Math.floor(percentComplete / 20)}</div>
+                <div class="stat-label">Achievements</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon-wrapper"><i class="fas fa-calendar"></i></div>
+                <div class="stat-number">${Math.ceil((totalLectures - unlockedCount) / 5)}</div>
+                <div class="stat-label">Est. Days Left</div>
             </div>
         </div>
         
         <div style="background: white; border-radius: 24px; padding: 28px; margin-bottom: 24px;">
-            <h3><i class="fas fa-question-circle"></i> Frequently Asked Questions</h3>
+            <h3><i class="fas fa-chart-simple"></i> Progress by Month</h3>
             <div style="margin-top: 20px;">
-                ${faqs.map((faq, index) => `
-                    <div style="border-bottom: 1px solid var(--light-gray); padding: 16px 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleFAQ(${index})">
-                            <strong><i class="fas fa-question-circle" style="color: var(--primary); margin-right: 10px;"></i> ${faq.question}</strong>
-                            <i class="fas fa-chevron-down" id="faqIcon${index}" style="transition: transform 0.3s;"></i>
+                ${monthsData.map(month => `
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span><strong>${getMonthName(month.month)}</strong></span>
+                            <span>${month.unlocked}/${month.total} lectures (${month.percent}%)</span>
                         </div>
-                        <div id="faqAnswer${index}" style="display: none; padding-top: 12px; color: var(--gray);">
-                            ${faq.answer}
+                        <div class="progress-bar-container" style="height: 10px;">
+                            <div class="progress-bar-fill" style="width: ${month.percent}%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light));"></div>
                         </div>
                     </div>
                 `).join('')}
@@ -52,88 +87,30 @@ async function renderSupportView() {
         </div>
         
         <div style="background: white; border-radius: 24px; padding: 28px;">
-            <h3><i class="fas fa-paper-plane"></i> Send Us a Message</h3>
-            <div id="contactForm" style="margin-top: 20px;">
-                <input type="text" id="contactName" class="auth-input" placeholder="Your Name" value="${window.currentUser?.user_metadata?.full_name || ''}">
-                <input type="email" id="contactEmail" class="auth-input" placeholder="Your Email" value="${window.currentUser?.email || ''}">
-                <select id="contactSubject" class="auth-input">
-                    <option value="general">General Inquiry</option>
-                    <option value="payment">Payment Issue</option>
-                    <option value="access">Lecture Access</option>
-                    <option value="technical">Technical Support</option>
-                    <option value="certificate">Certificate Request</option>
-                </select>
-                <textarea id="contactMessage" class="auth-input" rows="4" placeholder="Your message..."></textarea>
-                <button class="btn btn-primary" onclick="submitSupportTicket()" style="width: 100%;">
-                    <i class="fas fa-paper-plane"></i> Send Message
-                </button>
+            <h3><i class="fas fa-lightbulb"></i> Study Recommendations</h3>
+            <div class="featured-grid" style="margin-top: 16px;">
+                ${monthsData.filter(m => m.percent < 50).slice(0, 3).map(m => `
+                    <div class="featured-item" style="background: #fff3e0;">
+                        <i class="fas fa-book"></i> Focus on ${getMonthName(m.month)}
+                    </div>
+                `).join('')}
+                ${monthsData.filter(m => m.percent >= 50 && m.percent < 100).slice(0, 2).map(m => `
+                    <div class="featured-item" style="background: #e8f5e9;">
+                        <i class="fas fa-check-circle"></i> Review ${getMonthName(m.month)}
+                    </div>
+                `).join('')}
+                ${monthsData.every(m => m.percent === 100) ? `
+                    <div class="featured-item" style="background: var(--success); color: white;">
+                        <i class="fas fa-star"></i> Ready for NCLEX Exam!
+                    </div>
+                ` : ''}
             </div>
         </div>
     `;
 }
 
-// FAQ Data
-const faqs = [
-    { question: "How do I access purchased lectures?", answer: "After purchase, lectures are automatically unlocked. Click 'My Lectures' in the sidebar and you'll see all unlocked lectures with a green badge." },
-    { question: "How long do I have access to lectures?", answer: "Lifetime access! Once you purchase a lecture or bundle, you have unlimited access forever." },
-    { question: "What payment methods are accepted?", answer: "We accept M-Pesa (STK Push), Credit/Debit Cards, and PayPal. All payments are secure and encrypted." },
-    { question: "Can I get a refund?", answer: "We offer a 7-day money-back guarantee for bundle purchases. Individual lectures are non-refundable once accessed." },
-    { question: "How do I get my certificate?", answer: "Complete all 180 lectures to unlock the NCLEX Master Certificate. You can download it from the Certificates tab." },
-    { question: "What if I have technical issues?", answer: "Contact our support team via email or WhatsApp. We typically respond within 24 hours." }
-];
-
-// Toggle FAQ answer
-function toggleFAQ(index) {
-    const answer = document.getElementById(`faqAnswer${index}`);
-    const icon = document.getElementById(`faqIcon${index}`);
-    if (answer.style.display === 'none') {
-        answer.style.display = 'block';
-        icon.style.transform = 'rotate(180deg)';
-    } else {
-        answer.style.display = 'none';
-        icon.style.transform = 'rotate(0deg)';
-    }
-}
-
-// Show contact form with pre-filled method
-function showContactForm(method) {
-    const subject = document.getElementById('contactSubject');
-    if (subject) {
-        if (method === 'email') subject.value = 'general';
-        else if (method === 'whatsapp') subject.value = 'general';
-        else if (method === 'phone') subject.value = 'technical';
-    }
-    document.getElementById('contactForm')?.scrollIntoView({ behavior: 'smooth' });
-}
-
-// Submit support ticket
-async function submitSupportTicket() {
-    const name = document.getElementById('contactName')?.value;
-    const email = document.getElementById('contactEmail')?.value;
-    const subject = document.getElementById('contactSubject')?.value;
-    const message = document.getElementById('contactMessage')?.value;
-    
-    if (!name || !email || !message) {
-        if (window.showToast) showToast('Please fill all fields', 'error');
-        return;
-    }
-    
-    // Here you would typically save to Supabase
-    console.log('Support ticket:', { name, email, subject, message });
-    
-    if (window.showToast) {
-        showToast('Message sent! We\'ll respond within 24 hours.', 'success');
-    }
-    
-    // Clear form
-    const messageField = document.getElementById('contactMessage');
-    if (messageField) messageField.value = '';
-}
-
 // Expose to global window
-window.renderSupportView = renderSupportView;
-window.toggleFAQ = toggleFAQ;
-window.showContactForm = showContactForm;
-window.submitSupportTicket = submitSupportTicket;
+window.renderProgressView = renderProgressView;
+window.showProgress = renderProgressView;
 
-console.log('✅ Support module loaded');
+console.log('✅ Progress module loaded');
