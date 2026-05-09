@@ -13,6 +13,7 @@
     
     <!-- Chart.js for analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -25,6 +26,17 @@
         <div id="appContent" style="display: none;"></div>
     </div>
 
+    <!-- Initialize Supabase Client -->
+    <script>
+        const SUPABASE_URL = 'https://fbsnnsnebzzedypqbbip.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZic25uc25lYnp6ZWR5cHFiYmlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzY0NzAsImV4cCI6MjA5MzU1MjQ3MH0.9S0RCSCmdYkwJCi1WM-_75-1LKucxL4y-HNMMexB1Fk';
+        
+        // Create global supabase client
+        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('✅ Supabase client initialized for admin panel');
+    </script>
+    
+    <!-- Admin JS - uses the initialized supabase client -->
     <script src="assets/js/admin.js"></script>
 </body>
 </html>
