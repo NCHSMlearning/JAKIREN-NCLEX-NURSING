@@ -162,11 +162,34 @@
     <script src="assets/js/ui.js"></script>
     <script src="assets/js/app.js"></script>
     
-    <!-- Navigation Handler (connects sidebar to your existing modules) -->
+    <!-- Navigation Integration Script -->
     <script>
         (function() {
-            // Wait for app to initialize
-            document.addEventListener('DOMContentLoaded', function() {
+            // Wait for all modules to load and app to initialize
+            function waitForApp() {
+                return new Promise((resolve) => {
+                    const checkInterval = setInterval(() => {
+                        // Check if app is initialized and functions are available
+                        if (window.appInitialized || (window.renderDashboard && window.loadLectures)) {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                    
+                    // Timeout after 5 seconds
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }, 5000);
+                });
+            }
+            
+            // Navigation handler
+            async function setupNavigation() {
+                await waitForApp();
+                
+                console.log('Setting up navigation...');
+                
                 // Function to set active nav item
                 function setActiveNavItem(activeNav) {
                     document.querySelectorAll('.nav-item').forEach(item => {
@@ -179,7 +202,7 @@
                     });
                 }
                 
-                // Function to update page title based on view
+                // Function to update page title
                 function updatePageTitle(view) {
                     const titles = {
                         'dashboard': { title: 'Nursing Dashboard', subtitle: 'Track your NCLEX journey to success', icon: 'fa-graduation-cap' },
@@ -199,116 +222,194 @@
                     }
                 }
                 
-                // Navigation handler
-                function initNavigation() {
-                    const navItems = document.querySelectorAll('.nav-item');
+                // Render functions for each view
+                async function showDashboard() {
+                    const contentDiv = document.getElementById('dynamicContent');
+                    if (!contentDiv) return;
                     
-                    navItems.forEach(item => {
-                        item.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            const navValue = this.getAttribute('data-nav');
-                            
-                            // Update active state
-                            setActiveNavItem(navValue);
-                            
-                            // Update page title
-                            updatePageTitle(navValue);
-                            
-                            // Call the appropriate render function from your modules
-                            // These should be exposed globally by your modules
-                            if (navValue === 'dashboard') {
-                                if (window.renderDashboardView) {
-                                    window.renderDashboardView();
-                                } else if (window.renderDashboard) {
-                                    window.renderDashboard();
-                                } else {
-                                    console.log('Dashboard render function not found');
-                                }
-                            } else if (navValue === 'lectures') {
-                                if (window.renderLecturesView) {
-                                    window.renderLecturesView();
-                                } else if (window.renderLectures) {
-                                    window.renderLectures();
-                                } else {
-                                    console.log('Lectures render function not found');
-                                }
-                            } else if (navValue === 'progress') {
-                                if (window.renderProgressView) {
-                                    window.renderProgressView();
-                                } else if (window.showProgress) {
-                                    window.showProgress();
-                                } else {
-                                    // Fallback: show progress section
-                                    const contentDiv = document.getElementById('dynamicContent');
-                                    if (contentDiv && window.updateStats) {
-                                        window.updateStats();
-                                        contentDiv.innerHTML = `
-                                            <div class="progress-section">
-                                                <div class="progress-header">
-                                                    <div class="progress-label"><i class="fas fa-chart-simple"></i> Detailed Progress Analytics</div>
-                                                    <div class="progress-value" id="progressPercentDetail">0% Complete</div>
-                                                </div>
-                                                <div class="progress-bar-container">
-                                                    <div class="progress-bar-fill" id="progressBarDetail"></div>
-                                                </div>
-                                                <div class="progress-details" id="progressDetailText"></div>
-                                            </div>
-                                            <div class="stats-grid" id="progressStatsGrid"></div>
-                                        `;
-                                        if (window.updateStats) window.updateStats();
-                                    }
-                                }
-                            } else if (navValue === 'certificates') {
-                                const contentDiv = document.getElementById('dynamicContent');
-                                if (contentDiv) {
-                                    contentDiv.innerHTML = `
-                                        <div class="certificates-container" style="background: white; border-radius: 24px; padding: 40px; text-align: center;">
-                                            <i class="fas fa-certificate" style="font-size: 64px; color: var(--primary); margin-bottom: 20px;"></i>
-                                            <h2>Your Certificates</h2>
-                                            <p style="color: var(--gray); margin: 16px 0;">Complete the NCLEX course to earn your certificate.</p>
-                                            <div class="progress-section" style="margin-top: 20px;">
-                                                <div class="progress-label">Course Completion Progress</div>
-                                                <div class="progress-bar-container">
-                                                    <div class="progress-bar-fill" id="certProgressBar" style="width: 0%"></div>
-                                                </div>
-                                                <p style="margin-top: 12px;" id="certProgressText">Complete more lectures to unlock your certificate</p>
-                                            </div>
-                                        </div>
-                                    `;
-                                    if (window.updateStats) window.updateStats();
-                                }
-                            } else if (navValue === 'support') {
-                                const contentDiv = document.getElementById('dynamicContent');
-                                if (contentDiv) {
-                                    contentDiv.innerHTML = `
-                                        <div class="support-container" style="background: white; border-radius: 24px; padding: 40px;">
-                                            <h2><i class="fas fa-headset"></i> Support Center</h2>
-                                            <p style="margin: 16px 0; color: var(--gray);">Need help with your NCLEX preparation? Contact our support team.</p>
-                                            <div class="featured-section" style="margin-top: 20px;">
-                                                <h3>Contact Information</h3>
-                                                <p><i class="fas fa-envelope"></i> support@jakiren.com</p>
-                                                <p><i class="fas fa-phone"></i> +254 700 000 000</p>
-                                                <p><i class="fab fa-whatsapp"></i> +254 700 000 000</p>
-                                            </div>
-                                            <div class="featured-section">
-                                                <h3>Frequently Asked Questions</h3>
-                                                <p><strong>How do I access lectures?</strong> - Purchase lectures individually or get the bundle.</p>
-                                                <p><strong>How long do I have access?</strong> - Lifetime access to purchased lectures.</p>
-                                                <p><strong>NCLEX exam preparation tips?</strong> - Check our study guides in each lecture.</p>
-                                            </div>
-                                        </div>
-                                    `;
-                                }
-                            }
-                        });
-                    });
+                    // Try to use existing render functions
+                    if (window.renderDashboard) {
+                        await window.renderDashboard();
+                    } else if (window.renderMainDashboard) {
+                        await window.renderMainDashboard();
+                    } else {
+                        // Fallback dashboard
+                        contentDiv.innerHTML = `
+                            <div class="welcome-banner">
+                                <div class="welcome-text">
+                                    <h2>Welcome back, <span id="welcomeName">Nurse</span>! 👋</h2>
+                                    <p>Continue your NCLEX journey. You're making great progress!</p>
+                                </div>
+                                <div class="streak-badge">
+                                    <i class="fas fa-calendar-week"></i>
+                                    <div>NCLEX Ready</div>
+                                </div>
+                            </div>
+                            <div class="stats-grid" id="statsGrid"></div>
+                            <div class="progress-section">
+                                <div class="progress-label">Your Course Progress</div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar-fill" id="progressBarFill"></div>
+                                </div>
+                            </div>
+                        `;
+                        if (window.updateStats) window.updateStats();
+                    }
                 }
                 
-                // Wait for app to fully initialize
-                setTimeout(() => {
-                    initNavigation();
+                async function showLectures() {
+                    const contentDiv = document.getElementById('dynamicContent');
+                    if (!contentDiv) return;
                     
-                    // Set welcome name if available
+                    if (window.renderLectures) {
+                        await window.renderLectures();
+                    } else if (window.displayLectures) {
+                        await window.displayLectures();
+                    } else {
+                        contentDiv.innerHTML = `
+                            <div class="filter-bar">
+                                <div class="filter-buttons">
+                                    <button class="filter-btn active" data-filter="all">All</button>
+                                    <button class="filter-btn" data-filter="unlocked">Unlocked</button>
+                                    <button class="filter-btn" data-filter="locked">Locked</button>
+                                </div>
+                                <select id="monthFilter" class="month-select">
+                                    <option value="all">All Months</option>
+                                    <option value="1">Month 1: Fundamentals</option>
+                                    <option value="2">Month 2: Medical-Surgical</option>
+                                    <option value="3">Month 3: Pharmacology</option>
+                                    <option value="4">Month 4: Maternity & Pediatrics</option>
+                                    <option value="5">Month 5: Psychiatric Nursing</option>
+                                    <option value="6">Month 6: Final Review</option>
+                                </select>
+                            </div>
+                            <div class="lectures-grid" id="lecturesGrid">
+                                <div class="loading-state">Loading lectures...</div>
+                            </div>
+                        `;
+                        if (window.loadAndRenderLectures) {
+                            window.loadAndRenderLectures();
+                        } else if (window.loadLectures) {
+                            window.loadLectures();
+                        }
+                    }
+                }
+                
+                async function showProgress() {
+                    const contentDiv = document.getElementById('dynamicContent');
+                    if (!contentDiv) return;
+                    
+                    contentDiv.innerHTML = `
+                        <div class="progress-section">
+                            <div class="progress-header">
+                                <div class="progress-label">Detailed Progress Analytics</div>
+                                <div class="progress-value" id="progressPercentDetail">0% Complete</div>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" id="progressBarDetail"></div>
+                            </div>
+                            <div class="progress-details" id="progressDetailText"></div>
+                        </div>
+                        <div class="stats-grid" id="progressStatsGrid"></div>
+                        <div class="featured-section">
+                            <h3>Study Recommendations</h3>
+                            <div id="recommendations"></div>
+                        </div>
+                    `;
+                    if (window.updateStats) window.updateStats();
+                    if (window.updateProgressCharts) window.updateProgressCharts();
+                }
+                
+                async function showCertificates() {
+                    const contentDiv = document.getElementById('dynamicContent');
+                    if (!contentDiv) return;
+                    
+                    contentDiv.innerHTML = `
+                        <div style="background: white; border-radius: 24px; padding: 40px; text-align: center;">
+                            <i class="fas fa-certificate" style="font-size: 64px; color: var(--primary); margin-bottom: 20px;"></i>
+                            <h2>Your Certificates</h2>
+                            <p style="color: var(--gray); margin: 16px 0;">Complete the NCLEX course to earn your certificate.</p>
+                            <div class="progress-section" style="margin-top: 20px;">
+                                <div class="progress-label">Course Completion Progress</div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar-fill" id="certProgressBar" style="width: 0%"></div>
+                                </div>
+                                <p style="margin-top: 12px;" id="certProgressText">Complete more lectures to unlock your certificate</p>
+                            </div>
+                        </div>
+                    `;
+                    if (window.updateStats) {
+                        window.updateStats();
+                        setTimeout(() => {
+                            const percent = document.getElementById('progressPercent')?.innerText || '0%';
+                            const certBar = document.getElementById('certProgressBar');
+                            if (certBar) certBar.style.width = percent;
+                        }, 100);
+                    }
+                }
+                
+                async function showSupport() {
+                    const contentDiv = document.getElementById('dynamicContent');
+                    if (!contentDiv) return;
+                    
+                    contentDiv.innerHTML = `
+                        <div style="background: white; border-radius: 24px; padding: 40px;">
+                            <h2><i class="fas fa-headset"></i> Support Center</h2>
+                            <p style="margin: 16px 0; color: var(--gray);">Need help with your NCLEX preparation? Contact our support team.</p>
+                            <div class="featured-section" style="margin-top: 20px;">
+                                <h3>Contact Information</h3>
+                                <p><i class="fas fa-envelope"></i> support@jakiren.com</p>
+                                <p><i class="fas fa-phone"></i> +254 700 000 000</p>
+                                <p><i class="fab fa-whatsapp"></i> +254 700 000 000</p>
+                            </div>
+                            <div class="featured-section">
+                                <h3>Frequently Asked Questions</h3>
+                                <p><strong>How do I access lectures?</strong> - Purchase lectures individually or get the bundle.</p>
+                                <p><strong>How long do I have access?</strong> - Lifetime access to purchased lectures.</p>
+                                <p><strong>NCLEX exam preparation tips?</strong> - Check our study guides in each lecture.</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Attach click handlers to nav items
+                const navItems = document.querySelectorAll('.nav-item');
+                navItems.forEach(item => {
+                    item.addEventListener('click', async function(e) {
+                        e.preventDefault();
+                        const navValue = this.getAttribute('data-nav');
+                        
+                        console.log('Navigating to:', navValue);
+                        
+                        // Update active state
+                        setActiveNavItem(navValue);
+                        
+                        // Update page title
+                        updatePageTitle(navValue);
+                        
+                        // Show appropriate view
+                        switch(navValue) {
+                            case 'dashboard':
+                                await showDashboard();
+                                break;
+                            case 'lectures':
+                                await showLectures();
+                                break;
+                            case 'progress':
+                                await showProgress();
+                                break;
+                            case 'certificates':
+                                await showCertificates();
+                                break;
+                            case 'support':
+                                await showSupport();
+                                break;
+                        }
+                    });
+                });
+                
+                // Set welcome name
+                function updateUserInfo() {
                     if (window.currentUser && window.currentUser.email) {
                         const name = window.currentUser.user_metadata?.full_name || window.currentUser.email.split('@')[0];
                         const welcomeSpan = document.getElementById('welcomeNameShort');
@@ -317,9 +418,25 @@
                         if (sidebarNameSpan) sidebarNameSpan.innerHTML = name;
                         const avatarDiv = document.getElementById('userAvatar');
                         if (avatarDiv) avatarDiv.innerHTML = name.charAt(0).toUpperCase();
+                        
+                        const welcomeNameSpan = document.getElementById('welcomeName');
+                        if (welcomeNameSpan) welcomeNameSpan.innerHTML = name;
                     }
+                }
+                
+                // Initial load - show dashboard
+                setTimeout(() => {
+                    updateUserInfo();
+                    showDashboard();
                 }, 500);
-            });
+            }
+            
+            // Start navigation setup after DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupNavigation);
+            } else {
+                setupNavigation();
+            }
         })();
     </script>
 </body>
