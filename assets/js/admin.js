@@ -15,7 +15,6 @@ function showToast(message, isError = false) {
     if (!toast) {
         toast = document.createElement('div');
         toast.id = 'adminToast';
-        toast.className = 'toast';
         toast.style.cssText = `
             position: fixed;
             bottom: 30px;
@@ -41,7 +40,6 @@ async function checkAdminAuth() {
     try {
         if (!window.supabase) {
             console.error('Supabase not initialized');
-            showToast('Error: Supabase not initialized', true);
             return false;
         }
         
@@ -57,12 +55,6 @@ async function checkAdminAuth() {
             .select('is_admin, role')
             .eq('id', user.id)
             .single();
-        
-        if (error && error.code !== 'PGRST116') {
-            console.error('Error checking admin status:', error);
-            showAccessDenied();
-            return false;
-        }
         
         if (profile?.is_admin === true || profile?.role === 'admin') {
             currentAdmin = user;
@@ -84,27 +76,20 @@ function showLoginPage() {
     if (!appContent) return;
     
     appContent.innerHTML = `
-        <div class="admin-login-container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0a2f3f, #031f2f);">
-            <div class="admin-login-card" style="background: white; border-radius: 24px; padding: 40px; width: 400px; max-width: 90%; box-shadow: 0 20px 35px rgba(0,0,0,0.1);">
+        <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0a2f3f, #031f2f);">
+            <div style="background: white; border-radius: 24px; padding: 40px; width: 400px; max-width: 90%;">
                 <div style="text-align: center; margin-bottom: 32px;">
                     <div style="font-size: 48px;">🔐</div>
                     <h2>Admin Login</h2>
-                    <p style="color: #64748b;">Enter your admin credentials</p>
                 </div>
-                <input type="email" id="adminEmail" placeholder="Email" style="width: 100%; padding: 12px; margin-bottom: 16px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px;">
-                <input type="password" id="adminPassword" placeholder="Password" style="width: 100%; padding: 12px; margin-bottom: 24px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px;">
-                <button onclick="adminLogin()" style="width: 100%; padding: 12px; background: #1b4f6e; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600;">
-                    <i class="fas fa-sign-in-alt"></i> Login as Admin
-                </button>
-                <p style="text-align: center; margin-top: 16px;">
-                    <a href="index.html" style="color: #64748b; text-decoration: none;">← Back to Student Dashboard</a>
-                </p>
+                <input type="email" id="adminEmail" placeholder="Email" style="width: 100%; padding: 12px; margin-bottom: 16px; border-radius: 10px; border: 1px solid #ddd;">
+                <input type="password" id="adminPassword" placeholder="Password" style="width: 100%; padding: 12px; margin-bottom: 24px; border-radius: 10px; border: 1px solid #ddd;">
+                <button onclick="adminLogin()" style="width: 100%; padding: 12px; background: #1b4f6e; color: white; border: none; border-radius: 10px; cursor: pointer;">Login</button>
             </div>
         </div>
     `;
     appContent.style.display = 'block';
-    const loadingScreen = document.getElementById('loadingScreen');
-    if (loadingScreen) loadingScreen.style.display = 'none';
+    document.getElementById('loadingScreen').style.display = 'none';
 }
 
 function showAccessDenied() {
@@ -112,54 +97,62 @@ function showAccessDenied() {
     if (!appContent) return;
     
     appContent.innerHTML = `
-        <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; background: linear-gradient(135deg, #0a2f3f, #031f2f);">
-            <div style="background: white; border-radius: 24px; padding: 40px; max-width: 400px;">
+        <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center;">
+            <div style="background: white; border-radius: 24px; padding: 40px;">
                 <i class="fas fa-lock" style="font-size: 64px; color: #dc3545;"></i>
-                <h2 style="margin: 20px 0;">Access Denied</h2>
-                <p style="color: #64748b;">You don't have permission to access the admin panel.</p>
-                <button onclick="window.location.href='index.html'" style="margin-top: 20px; padding: 12px 24px; background: #1b4f6e; color: white; border: none; border-radius: 10px; cursor: pointer;">
-                    Back to Home
-                </button>
+                <h2>Access Denied</h2>
+                <p>You don't have permission to access the admin panel.</p>
+                <button onclick="window.location.href='index.html'" style="margin-top: 20px; padding: 12px 24px; background: #1b4f6e; color: white; border: none; border-radius: 10px; cursor: pointer;">Back to Home</button>
             </div>
         </div>
     `;
     appContent.style.display = 'block';
-    const loadingScreen = document.getElementById('loadingScreen');
-    if (loadingScreen) loadingScreen.style.display = 'none';
+    document.getElementById('loadingScreen').style.display = 'none';
 }
 
 window.adminLogin = async function() {
     const email = document.getElementById('adminEmail').value;
     const password = document.getElementById('adminPassword').value;
     
-    if (!email || !password) {
-        showToast('Please fill in all fields', true);
-        return;
-    }
-    
-    const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
+    const { error } = await window.supabase.auth.signInWithPassword({ email, password });
     
     if (error) {
         showToast('Login failed: ' + error.message, true);
-        return;
+    } else {
+        showToast('Login successful!');
+        setTimeout(() => location.reload(), 1000);
     }
-    
-    showToast('Login successful!');
-    setTimeout(() => location.reload(), 1000);
 };
 
 // ========== LOAD DATA ==========
 async function loadAllUsers() {
-    const { data, error } = await window.supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+    // Get users from auth and join with profiles
+    const { data: users, error } = await window.supabase.auth.admin.listUsers();
     
     if (error) {
         console.error('Error loading users:', error);
-        return [];
+        // Fallback: get from profiles
+        const { data: profiles } = await window.supabase.from('profiles').select('*');
+        allUsers = profiles || [];
+        return allUsers;
     }
-    allUsers = data || [];
+    
+    // Get profiles data
+    const { data: profiles } = await window.supabase.from('profiles').select('*');
+    const profileMap = new Map();
+    profiles?.forEach(p => profileMap.set(p.id, p));
+    
+    allUsers = users.users.map(user => ({
+        id: user.id,
+        email: user.email,
+        full_name: profileMap.get(user.id)?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0],
+        is_admin: profileMap.get(user.id)?.is_admin || false,
+        role: profileMap.get(user.id)?.role || 'user',
+        is_locked: profileMap.get(user.id)?.is_locked || false,
+        created_at: user.created_at,
+        last_sign_in: user.last_sign_in_at
+    }));
+    
     return allUsers;
 }
 
@@ -167,12 +160,9 @@ async function loadAllLectures() {
     const { data, error } = await window.supabase
         .from('lectures')
         .select('*')
-        .order('lecture_number', { ascending: true });
+        .order('lecture_number');
     
-    if (error) {
-        console.error('Error loading lectures:', error);
-        return [];
-    }
+    if (error) console.error('Error loading lectures:', error);
     allLectures = data || [];
     return allLectures;
 }
@@ -180,16 +170,164 @@ async function loadAllLectures() {
 async function loadAllSales() {
     const { data, error } = await window.supabase
         .from('user_purchases')
-        .select('*, profiles!user_purchases_user_id_fkey(id, email, full_name)')
+        .select('*, profiles!user_purchases_user_id_fkey(id, full_name)')
         .order('purchased_at', { ascending: false });
     
-    if (error) {
-        console.error('Error loading sales:', error);
-        return [];
-    }
+    if (error) console.error('Error loading sales:', error);
     allSales = data || [];
     return allSales;
 }
+
+// ========== USER MANAGEMENT FUNCTIONS ==========
+
+// Edit user details
+window.editUser = async function(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+    
+    const newName = prompt('Edit full name:', user.full_name);
+    if (newName && newName !== user.full_name) {
+        const { error } = await window.supabase
+            .from('profiles')
+            .update({ full_name: newName })
+            .eq('id', userId);
+        
+        if (error) {
+            showToast('Error updating name: ' + error.message, true);
+        } else {
+            showToast('User name updated!');
+            await loadAllUsers();
+            renderUsersManagement();
+        }
+    }
+};
+
+// Reset user password
+window.resetUserPassword = async function(userId, email) {
+    if (confirm(`Reset password for ${email}? They will receive a password reset email.`)) {
+        const { error } = await window.supabase.auth.admin.generateLink({
+            type: 'recovery',
+            email: email
+        });
+        
+        if (error) {
+            showToast('Error: ' + error.message, true);
+        } else {
+            showToast(`Password reset email sent to ${email}`);
+        }
+    }
+};
+
+// Toggle user access (lock/unlock account)
+window.toggleUserAccess = async function(userId, currentLocked) {
+    const action = currentLocked ? 'unlock' : 'lock';
+    if (confirm(`Are you sure you want to ${action} this user?`)) {
+        const { error } = await window.supabase
+            .from('profiles')
+            .update({ is_locked: !currentLocked })
+            .eq('id', userId);
+        
+        if (error) {
+            showToast('Error: ' + error.message, true);
+        } else {
+            showToast(`User ${action}ed successfully!`);
+            await loadAllUsers();
+            renderUsersManagement();
+        }
+    }
+};
+
+// Toggle admin role
+window.toggleAdminRole = async function(userId, makeAdmin) {
+    const { error } = await window.supabase
+        .from('profiles')
+        .update({ is_admin: makeAdmin, role: makeAdmin ? 'admin' : 'user' })
+        .eq('id', userId);
+    
+    if (error) {
+        showToast('Error updating role: ' + error.message, true);
+    } else {
+        showToast(makeAdmin ? 'User is now Admin' : 'Admin role removed');
+        await loadAllUsers();
+        renderUsersManagement();
+    }
+};
+
+// Delete user
+window.deleteUser = async function(userId, email) {
+    if (confirm(`⚠️ WARNING: Delete user ${email}?\nThis action cannot be undone!`)) {
+        const { error } = await window.supabase.auth.admin.deleteUser(userId);
+        
+        if (error) {
+            showToast('Error deleting user: ' + error.message, true);
+        } else {
+            showToast('User deleted successfully');
+            await loadAllUsers();
+            renderUsersManagement();
+        }
+    }
+};
+
+// View user purchases
+window.viewUserPurchases = async function(userId, userName) {
+    const { data: purchases } = await window.supabase
+        .from('user_purchases')
+        .select('*, lectures(*)')
+        .eq('user_id', userId);
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 20px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <h3>${userName}'s Purchases</h3>
+                <button onclick="this.closest('div').parentElement.remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            ${purchases?.length > 0 ? `
+                <ul style="list-style: none; padding: 0;">
+                    ${purchases.map(p => `
+                        <li style="padding: 12px; border-bottom: 1px solid #eee;">
+                            <strong>Lecture ${p.lectures?.lecture_number}:</strong> ${p.lectures?.title}<br>
+                            <small>Paid: KES ${p.amount_paid} on ${new Date(p.purchased_at).toLocaleDateString()}</small>
+                        </li>
+                    `).join('')}
+                </ul>
+            ` : '<p>No purchases yet.</p>'}
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+};
+
+// Grant free access to lecture
+window.grantFreeAccess = async function(userId, lectureId) {
+    const lecture = allLectures.find(l => l.id == lectureId);
+    if (!lecture) return;
+    
+    if (confirm(`Grant free access to "${lecture.title}" for this user?`)) {
+        const { error } = await window.supabase
+            .from('user_purchases')
+            .insert([{ user_id: userId, lecture_id: lectureId, amount_paid: 0 }]);
+        
+        if (error) {
+            showToast('Error: ' + error.message, true);
+        } else {
+            showToast(`Free access granted for ${lecture.title}`);
+        }
+    }
+};
 
 // ========== RENDER DASHBOARD ==========
 async function renderDashboard() {
@@ -202,40 +340,35 @@ async function renderDashboard() {
     
     const totalRevenue = allSales.reduce((sum, sale) => sum + (sale.amount_paid || 0), 0);
     const uniqueStudents = new Set(allSales.map(s => s.user_id)).size;
-    const totalPurchases = allSales.length;
     
     contentDiv.innerHTML = `
-        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 24px;">
-            <div class="stat-card" style="background: white; border-radius: 20px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <div><h3 style="font-size: 32px;">${allUsers.length}</h3><p>Total Users</p></div>
-                <i class="fas fa-users" style="font-size: 40px; color: #1b4f6e;"></i>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 24px;">
+            <div style="background: white; border-radius: 20px; padding: 20px;">
+                <h3 style="font-size: 32px;">${allUsers.length}</h3>
+                <p>Total Users</p>
             </div>
-            <div class="stat-card" style="background: white; border-radius: 20px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <div><h3 style="font-size: 32px;">${allLectures.length}</h3><p>Total Lectures</p></div>
-                <i class="fas fa-book" style="font-size: 40px; color: #1b4f6e;"></i>
+            <div style="background: white; border-radius: 20px; padding: 20px;">
+                <h3 style="font-size: 32px;">${allLectures.length}</h3>
+                <p>Total Lectures</p>
             </div>
-            <div class="stat-card" style="background: white; border-radius: 20px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <div><h3 style="font-size: 32px;">${uniqueStudents}</h3><p>Active Students</p></div>
-                <i class="fas fa-user-graduate" style="font-size: 40px; color: #1b4f6e;"></i>
+            <div style="background: white; border-radius: 20px; padding: 20px;">
+                <h3 style="font-size: 32px;">${uniqueStudents}</h3>
+                <p>Active Students</p>
             </div>
-            <div class="stat-card" style="background: white; border-radius: 20px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <div><h3 style="font-size: 32px;">KES ${totalRevenue.toLocaleString()}</h3><p>Total Revenue</p></div>
-                <i class="fas fa-chart-line" style="font-size: 40px; color: #1b4f6e;"></i>
-            </div>
-            <div class="stat-card" style="background: white; border-radius: 20px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <div><h3 style="font-size: 32px;">${totalPurchases}</h3><p>Total Purchases</p></div>
-                <i class="fas fa-shopping-cart" style="font-size: 40px; color: #1b4f6e;"></i>
+            <div style="background: white; border-radius: 20px; padding: 20px;">
+                <h3 style="font-size: 32px;">KES ${totalRevenue.toLocaleString()}</h3>
+                <p>Total Revenue</p>
             </div>
         </div>
         
-        <div class="quick-actions" style="background: white; border-radius: 20px; padding: 20px; margin-bottom: 24px;">
+        <div style="background: white; border-radius: 20px; padding: 20px; margin-bottom: 24px;">
             <h3>Quick Actions</h3>
             <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px;">
-                <button class="btn btn-primary" onclick="switchTab('addLecture')" style="padding: 10px 20px; background: #1b4f6e; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                    <i class="fas fa-plus"></i> Add Lecture
-                </button>
-                <button class="btn btn-success" onclick="switchTab('users')" style="padding: 10px 20px; background: #2e8b57; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                <button class="btn btn-primary" onclick="switchTab('users')" style="padding: 10px 20px; background: #1b4f6e; color: white; border: none; border-radius: 8px; cursor: pointer;">
                     <i class="fas fa-users"></i> Manage Users
+                </button>
+                <button class="btn btn-success" onclick="switchTab('lectures')" style="padding: 10px 20px; background: #2e8b57; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    <i class="fas fa-book"></i> Manage Lectures
                 </button>
                 <button class="btn btn-info" onclick="exportAllData()" style="padding: 10px 20px; background: #17a2b8; color: white; border: none; border-radius: 8px; cursor: pointer;">
                     <i class="fas fa-download"></i> Export Data
@@ -243,23 +376,22 @@ async function renderDashboard() {
             </div>
         </div>
         
-        <div class="data-table" style="background: white; border-radius: 20px; overflow: hidden;">
-            <div class="table-header" style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0;">
+        <div style="background: white; border-radius: 20px; overflow-x: auto;">
+            <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0;">
                 <h3>Recent Sales</h3>
             </div>
             <table style="width: 100%; border-collapse: collapse;">
                 <thead style="background: #f1f5f9;">
-                    <tr><th style="padding: 12px 16px; text-align: left;">User</th><th style="padding: 12px 16px; text-align: left;">Amount</th><th style="padding: 12px 16px; text-align: left;">Date</th></tr>
+                    <tr><th style="padding: 12px 16px;">User</th><th>Amount</th><th>Date</th></tr>
                 </thead>
                 <tbody>
                     ${allSales.slice(0, 10).map(sale => `
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 12px 16px;">${sale.profiles?.email || sale.user_id?.slice(0, 8) || 'N/A'}</td>
+                            <td style="padding: 12px 16px;">${sale.profiles?.full_name || sale.user_id?.slice(0, 8)}</td>
                             <td style="padding: 12px 16px;">KES ${(sale.amount_paid || 0).toLocaleString()}</td>
                             <td style="padding: 12px 16px;">${new Date(sale.purchased_at).toLocaleDateString()}</td>
                         </tr>
                     `).join('')}
-                    ${allSales.length === 0 ? '<tr><td colspan="3" style="padding: 40px; text-align: center;">No sales yet</td></tr>' : ''}
                 </tbody>
             </table>
         </div>
@@ -276,25 +408,31 @@ async function renderUsersManagement() {
     contentDiv.innerHTML = `
         <div style="background: white; border-radius: 20px; padding: 20px; margin-bottom: 24px;">
             <h3>User Management</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 16px;">
                 <input type="text" id="userSearch" placeholder="🔍 Search users..." onkeyup="filterUsers()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
                 <select id="roleFilter" onchange="filterUsers()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
                     <option value="all">All Roles</option>
-                    <option value="user">Users</option>
                     <option value="admin">Admins</option>
+                    <option value="user">Users</option>
+                </select>
+                <select id="statusFilter" onchange="filterUsers()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="locked">Locked</option>
                 </select>
             </div>
         </div>
         
-        <div class="data-table" style="background: white; border-radius: 20px; overflow-x: auto;">
+        <div style="background: white; border-radius: 20px; overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse;">
                 <thead style="background: #f1f5f9;">
                     <tr>
-                        <th style="padding: 12px 16px; text-align: left;">Name</th>
-                        <th style="padding: 12px 16px; text-align: left;">Email</th>
-                        <th style="padding: 12px 16px; text-align: left;">Role</th>
-                        <th style="padding: 12px 16px; text-align: left;">Joined</th>
-                        <th style="padding: 12px 16px; text-align: left;">Actions</th>
+                        <th style="padding: 12px 16px;">Name</th>
+                        <th style="padding: 12px 16px;">Email</th>
+                        <th style="padding: 12px 16px;">Role</th>
+                        <th style="padding: 12px 16px;">Status</th>
+                        <th style="padding: 12px 16px;">Joined</th>
+                        <th style="padding: 12px 16px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
@@ -302,14 +440,35 @@ async function renderUsersManagement() {
                         <tr style="border-bottom: 1px solid #e2e8f0;">
                             <td style="padding: 12px 16px;">${user.full_name || 'N/A'}</td>
                             <td style="padding: 12px 16px;">${user.email || 'N/A'}</td>
-                            <td style="padding: 12px 16px;"><span style="display: inline-block; padding: 4px 12px; border-radius: 50px; font-size: 12px; background: ${user.is_admin ? '#e8f5e9' : '#fff3e0'}; color: ${user.is_admin ? '#2e8b57' : '#f59e0b'};">${user.is_admin ? 'Admin' : 'User'}</span></td>
+                            <td style="padding: 12px 16px;">
+                                <span style="display: inline-block; padding: 4px 12px; border-radius: 50px; font-size: 12px; background: ${user.is_admin ? '#e8f5e9' : '#fff3e0'}; color: ${user.is_admin ? '#2e8b57' : '#f59e0b'};">
+                                    ${user.is_admin ? 'Admin' : 'User'}
+                                </span>
+                            </td>
+                            <td style="padding: 12px 16px;">
+                                <span style="display: inline-block; padding: 4px 12px; border-radius: 50px; font-size: 12px; background: ${user.is_locked ? '#ffebee' : '#e8f5e9'}; color: ${user.is_locked ? '#dc3545' : '#2e8b57'};">
+                                    ${user.is_locked ? '🔒 Locked' : '✅ Active'}
+                                </span>
+                            </td>
                             <td style="padding: 12px 16px;">${new Date(user.created_at).toLocaleDateString()}</td>
                             <td style="padding: 12px 16px;">
-                                <button onclick="toggleAdminRole('${user.id}', ${!user.is_admin})" style="padding: 6px 12px; background: #1b4f6e; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 8px;">
-                                    ${user.is_admin ? 'Remove Admin' : 'Make Admin'}
+                                <button onclick="editUser('${user.id}')" title="Edit User" style="padding: 6px 10px; background: #1b4f6e; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 5px;">
+                                    <i class="fas fa-edit"></i>
                                 </button>
-                                <button onclick="deleteUser('${user.id}')" style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                                    Delete
+                                <button onclick="viewUserPurchases('${user.id}', '${user.full_name}')" title="View Purchases" style="padding: 6px 10px; background: #17a2b8; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 5px;">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <button onclick="resetUserPassword('${user.id}', '${user.email}')" title="Reset Password" style="padding: 6px 10px; background: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 5px;">
+                                    <i class="fas fa-key"></i>
+                                </button>
+                                <button onclick="toggleUserAccess('${user.id}', ${user.is_locked})" title="${user.is_locked ? 'Unlock' : 'Lock'} User" style="padding: 6px 10px; background: ${user.is_locked ? '#2e8b57' : '#dc3545'}; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 5px;">
+                                    <i class="fas ${user.is_locked ? 'fa-unlock-alt' : 'fa-lock'}"></i>
+                                </button>
+                                <button onclick="toggleAdminRole('${user.id}', ${!user.is_admin})" title="${user.is_admin ? 'Remove Admin' : 'Make Admin'}" style="padding: 6px 10px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 5px;">
+                                    <i class="fas ${user.is_admin ? 'fa-user-minus' : 'fa-user-plus'}"></i>
+                                </button>
+                                <button onclick="deleteUser('${user.id}', '${user.email}')" title="Delete User" style="padding: 6px 10px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </td>
                         </tr>
@@ -342,10 +501,10 @@ async function renderLecturesManagement() {
                 </select>
                 <input type="text" id="lectureTitle" placeholder="Lecture Title" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
                 <input type="number" id="lecturePrice" placeholder="Price (KES)" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                <input type="text" id="lectureDuration" placeholder="Duration (e.g., 2 hours)" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                <input type="text" id="lectureVideoUrl" placeholder="YouTube Video URL" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <input type="text" id="lectureDuration" placeholder="Duration" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <input type="text" id="lectureVideoUrl" placeholder="YouTube URL" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
             </div>
-            <textarea id="lectureNotes" rows="3" placeholder="Study Notes" style="width: 100%; padding: 10px; margin-top: 16px; border: 1px solid #e2e8f0; border-radius: 8px;"></textarea>
+            <textarea id="lectureNotes" rows="3" placeholder="Study Notes" style="width: 100%; margin-top: 16px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;"></textarea>
             <div style="margin-top: 16px;">
                 <label><input type="checkbox" id="lectureIsFree"> Free Lecture</label>
             </div>
@@ -358,33 +517,22 @@ async function renderLecturesManagement() {
             <input type="text" id="lectureSearch" placeholder="🔍 Search lectures..." onkeyup="filterLectures()" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
         </div>
         
-        <div class="data-table" style="background: white; border-radius: 20px; overflow-x: auto;">
+        <div style="background: white; border-radius: 20px; overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse;">
                 <thead style="background: #f1f5f9;">
-                    <tr>
-                        <th style="padding: 12px 16px; text-align: left;">#</th>
-                        <th style="padding: 12px 16px; text-align: left;">Month</th>
-                        <th style="padding: 12px 16px; text-align: left;">Title</th>
-                        <th style="padding: 12px 16px; text-align: left;">Price</th>
-                        <th style="padding: 12px 16px; text-align: left;">Duration</th>
-                        <th style="padding: 12px 16px; text-align: left;">Actions</th>
-                    </tr>
+                    <tr><th>#</th><th>Month</th><th>Title</th><th>Price</th><th>Duration</th><th>Actions</th></tr>
                 </thead>
                 <tbody id="lecturesTableBody">
                     ${allLectures.map(lecture => `
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 12px 16px;">${lecture.lecture_number}</td>
-                            <td style="padding: 12px 16px;">Month ${lecture.month}</td>
-                            <td style="padding: 12px 16px;">${lecture.title}</td>
-                            <td style="padding: 12px 16px;">${lecture.is_free ? 'FREE' : 'KES ' + (lecture.price || 0)}</td>
-                            <td style="padding: 12px 16px;">${lecture.duration || 'N/A'}</td>
-                            <td style="padding: 12px 16px;">
-                                <button onclick="editLectureForm(${lecture.id})" style="padding: 6px 12px; background: #1b4f6e; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 8px;">
-                                    Edit
-                                </button>
-                                <button onclick="deleteLecture(${lecture.id})" style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                                    Delete
-                                </button>
+                            <td style="padding: 12px;">${lecture.lecture_number}</td>
+                            <td style="padding: 12px;">Month ${lecture.month}</td>
+                            <td style="padding: 12px;">${lecture.title}</td>
+                            <td style="padding: 12px;">${lecture.is_free ? 'FREE' : 'KES ' + (lecture.price || 0)}</td>
+                            <td style="padding: 12px;">${lecture.duration || 'N/A'}</td>
+                            <td style="padding: 12px;">
+                                <button onclick="editLecture(${lecture.id})" style="padding: 6px 12px; background: #1b4f6e; color: white; border: none; border-radius: 6px; cursor: pointer;">Edit</button>
+                                <button onclick="deleteLecture(${lecture.id})" style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">Delete</button>
                             </td>
                         </tr>
                     `).join('')}
@@ -418,30 +566,11 @@ window.addLecture = async function() {
         showToast('Error: ' + error.message, true);
     } else {
         showToast('Lecture added successfully!');
-        document.getElementById('lectureNumber').value = '';
-        document.getElementById('lectureTitle').value = '';
-        document.getElementById('lecturePrice').value = '';
-        document.getElementById('lectureDuration').value = '';
-        document.getElementById('lectureVideoUrl').value = '';
-        document.getElementById('lectureNotes').value = '';
-        document.getElementById('lectureIsFree').checked = false;
         renderLecturesManagement();
     }
 };
 
-window.deleteLecture = async function(lectureId) {
-    if (confirm('Are you sure you want to delete this lecture?')) {
-        const { error } = await window.supabase.from('lectures').delete().eq('id', lectureId);
-        if (error) {
-            showToast('Error deleting lecture', true);
-        } else {
-            showToast('Lecture deleted');
-            renderLecturesManagement();
-        }
-    }
-};
-
-window.editLectureForm = async function(lectureId) {
+window.editLecture = async function(lectureId) {
     const lecture = allLectures.find(l => l.id === lectureId);
     if (!lecture) return;
     
@@ -461,29 +590,15 @@ window.editLectureForm = async function(lectureId) {
     }
 };
 
-window.deleteUser = async function(userId) {
-    if (confirm('Are you sure you want to delete this user?')) {
-        const { error } = await window.supabase.from('profiles').delete().eq('id', userId);
+window.deleteLecture = async function(lectureId) {
+    if (confirm('Delete this lecture?')) {
+        const { error } = await window.supabase.from('lectures').delete().eq('id', lectureId);
         if (error) {
-            showToast('Error deleting user', true);
+            showToast('Error deleting lecture', true);
         } else {
-            showToast('User deleted');
-            renderUsersManagement();
+            showToast('Lecture deleted');
+            renderLecturesManagement();
         }
-    }
-};
-
-window.toggleAdminRole = async function(userId, makeAdmin) {
-    const { error } = await window.supabase
-        .from('profiles')
-        .update({ is_admin: makeAdmin, role: makeAdmin ? 'admin' : 'user' })
-        .eq('id', userId);
-    
-    if (error) {
-        showToast('Error updating role', true);
-    } else {
-        showToast(makeAdmin ? 'User is now Admin' : 'Admin role removed');
-        renderUsersManagement();
     }
 };
 
@@ -491,6 +606,7 @@ window.toggleAdminRole = async function(userId, makeAdmin) {
 window.filterUsers = function() {
     const searchTerm = document.getElementById('userSearch')?.value.toLowerCase() || '';
     const roleFilter = document.getElementById('roleFilter')?.value || 'all';
+    const statusFilter = document.getElementById('statusFilter')?.value || 'all';
     
     const filtered = allUsers.filter(user => {
         const matchesSearch = (user.email?.toLowerCase().includes(searchTerm) || 
@@ -498,7 +614,10 @@ window.filterUsers = function() {
         const matchesRole = roleFilter === 'all' || 
                            (roleFilter === 'admin' && user.is_admin) ||
                            (roleFilter === 'user' && !user.is_admin);
-        return matchesSearch && matchesRole;
+        const matchesStatus = statusFilter === 'all' ||
+                             (statusFilter === 'locked' && user.is_locked) ||
+                             (statusFilter === 'active' && !user.is_locked);
+        return matchesSearch && matchesRole && matchesStatus;
     });
     
     const tbody = document.getElementById('usersTableBody');
@@ -507,15 +626,13 @@ window.filterUsers = function() {
             <tr style="border-bottom: 1px solid #e2e8f0;">
                 <td style="padding: 12px 16px;">${user.full_name || 'N/A'}</td>
                 <td style="padding: 12px 16px;">${user.email || 'N/A'}</td>
-                <td style="padding: 12px 16px;"><span style="display: inline-block; padding: 4px 12px; border-radius: 50px; font-size: 12px; background: ${user.is_admin ? '#e8f5e9' : '#fff3e0'}; color: ${user.is_admin ? '#2e8b57' : '#f59e0b'};">${user.is_admin ? 'Admin' : 'User'}</span></td>
+                <td style="padding: 12px 16px;"><span style="padding: 4px 12px; border-radius: 50px; background: ${user.is_admin ? '#e8f5e9' : '#fff3e0'};">${user.is_admin ? 'Admin' : 'User'}</span></td>
+                <td style="padding: 12px 16px;"><span style="padding: 4px 12px; border-radius: 50px; background: ${user.is_locked ? '#ffebee' : '#e8f5e9'};">${user.is_locked ? 'Locked' : 'Active'}</span></td>
                 <td style="padding: 12px 16px;">${new Date(user.created_at).toLocaleDateString()}</td>
                 <td style="padding: 12px 16px;">
-                    <button onclick="toggleAdminRole('${user.id}', ${!user.is_admin})" style="padding: 6px 12px; background: #1b4f6e; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 8px;">
-                        ${user.is_admin ? 'Remove Admin' : 'Make Admin'}
-                    </button>
-                    <button onclick="deleteUser('${user.id}')" style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                        Delete
-                    </button>
+                    <button onclick="editUser('${user.id}')" style="padding: 6px 10px; background: #1b4f6e; color: white; border: none; border-radius: 6px; cursor: pointer;">Edit</button>
+                    <button onclick="toggleUserAccess('${user.id}', ${user.is_locked})" style="padding: 6px 10px; background: ${user.is_locked ? '#2e8b57' : '#dc3545'}; color: white; border: none; border-radius: 6px; cursor: pointer;">${user.is_locked ? 'Unlock' : 'Lock'}</button>
+                    <button onclick="toggleAdminRole('${user.id}', ${!user.is_admin})" style="padding: 6px 10px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">${user.is_admin ? 'Remove Admin' : 'Make Admin'}</button>
                 </td>
             </tr>
         `).join('');
@@ -524,25 +641,13 @@ window.filterUsers = function() {
 
 window.filterLectures = function() {
     const searchTerm = document.getElementById('lectureSearch')?.value.toLowerCase() || '';
-    
-    const filtered = allLectures.filter(lecture => 
-        lecture.title.toLowerCase().includes(searchTerm)
-    );
+    const filtered = allLectures.filter(l => l.title.toLowerCase().includes(searchTerm));
     
     const tbody = document.getElementById('lecturesTableBody');
     if (tbody) {
         tbody.innerHTML = filtered.map(lecture => `
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 12px 16px;">${lecture.lecture_number}</td>
-                <td style="padding: 12px 16px;">Month ${lecture.month}</td>
-                <td style="padding: 12px 16px;">${lecture.title}</td>
-                <td style="padding: 12px 16px;">${lecture.is_free ? 'FREE' : 'KES ' + (lecture.price || 0)}</td>
-                <td style="padding: 12px 16px;">${lecture.duration || 'N/A'}</td>
-                <td style="padding: 12px 16px;">
-                    <button onclick="editLectureForm(${lecture.id})" style="padding: 6px 12px; background: #1b4f6e; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 8px;">Edit</button>
-                    <button onclick="deleteLecture(${lecture.id})" style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">Delete</button>
-                </td>
-            </tr>
+            <tr><td>${lecture.lecture_number}</td><td>Month ${lecture.month}</td><td>${lecture.title}</td><td>${lecture.is_free ? 'FREE' : 'KES ' + (lecture.price || 0)}</td><td>${lecture.duration || 'N/A'}</td>
+            <td><button onclick="editLecture(${lecture.id})">Edit</button> <button onclick="deleteLecture(${lecture.id})">Delete</button></td></tr>
         `).join('');
     }
 };
@@ -571,24 +676,19 @@ window.exportAllData = async function() {
     link.href = URL.createObjectURL(blob);
     link.download = `nclex_admin_export_${new Date().toISOString().split('T')[0]}.json`;
     link.click();
-    URL.revokeObjectURL(link.href);
-    showToast('Data exported successfully!');
+    showToast('Data exported!');
 };
 
 // ========== NAVIGATION ==========
 window.switchTab = async function(tab) {
-    currentTab = tab;
-    
     document.querySelectorAll('.admin-nav-item').forEach(item => {
         item.classList.remove('active');
-        if (item.getAttribute('data-tab') === tab) {
-            item.classList.add('active');
-        }
+        if (item.getAttribute('data-tab') === tab) item.classList.add('active');
     });
     
     if (tab === 'dashboard') await renderDashboard();
     else if (tab === 'users') await renderUsersManagement();
-    else if (tab === 'lectures' || tab === 'addLecture') await renderLecturesManagement();
+    else if (tab === 'lectures') await renderLecturesManagement();
 };
 
 window.logoutAdmin = async function() {
@@ -596,49 +696,32 @@ window.logoutAdmin = async function() {
     location.reload();
 };
 
-// ========== INITIALIZE ADMIN PANEL ==========
+// ========== INITIALIZE ==========
 async function initAdminPanel() {
     const isAuthenticated = await checkAdminAuth();
     if (!isAuthenticated) return;
     
     const appContent = document.getElementById('appContent');
-    if (!appContent) return;
-    
     appContent.innerHTML = `
         <div style="display: flex; min-height: 100vh;">
             <aside style="width: 280px; background: linear-gradient(180deg, #0f2b3d 0%, #1a4a63 100%); color: white;">
                 <div style="padding: 24px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <div style="font-size: 32px;">🔐</div>
-                    <h2>Admin</h2>
-                    <p style="font-size: 12px; opacity: 0.7;">NCLEX Manager</p>
+                    <h2>Admin Panel</h2>
                 </div>
                 <nav style="padding: 20px 0;">
-                    <div class="admin-nav-item active" data-tab="dashboard" style="display: flex; align-items: center; gap: 12px; padding: 12px 24px; cursor: pointer;">
-                        <i class="fas fa-tachometer-alt"></i> <span>Dashboard</span>
-                    </div>
-                    <div class="admin-nav-item" data-tab="users" style="display: flex; align-items: center; gap: 12px; padding: 12px 24px; cursor: pointer;">
-                        <i class="fas fa-users"></i> <span>Users</span>
-                    </div>
-                    <div class="admin-nav-item" data-tab="lectures" style="display: flex; align-items: center; gap: 12px; padding: 12px 24px; cursor: pointer;">
-                        <i class="fas fa-book"></i> <span>Lectures</span>
-                    </div>
+                    <div class="admin-nav-item active" data-tab="dashboard" style="padding: 12px 24px; cursor: pointer;"><i class="fas fa-tachometer-alt"></i> Dashboard</div>
+                    <div class="admin-nav-item" data-tab="users" style="padding: 12px 24px; cursor: pointer;"><i class="fas fa-users"></i> Users</div>
+                    <div class="admin-nav-item" data-tab="lectures" style="padding: 12px 24px; cursor: pointer;"><i class="fas fa-book"></i> Lectures</div>
                 </nav>
                 <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <button onclick="logoutAdmin()" style="width: 100%; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </button>
+                    <button onclick="logoutAdmin()" style="width: 100%; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">Logout</button>
                 </div>
             </aside>
-            
             <main style="flex: 1; padding: 24px; background: #f1f5f9;">
-                <div style="background: white; border-radius: 16px; padding: 20px 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <h1>Admin Dashboard</h1>
-                        <p style="color: #64748b;">Manage NCLEX Nursing Platform</p>
-                    </div>
-                    <div>
-                        <span>${currentAdmin?.email}</span>
-                    </div>
+                <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 24px;">
+                    <h1>Admin Dashboard</h1>
+                    <p style="color: #64748b;">Manage NCLEX Nursing Platform</p>
                 </div>
                 <div id="dynamicContent"></div>
             </main>
@@ -646,18 +729,19 @@ async function initAdminPanel() {
     `;
     
     document.querySelectorAll('.admin-nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const tab = item.getAttribute('data-tab');
-            switchTab(tab);
-        });
+        item.addEventListener('click', () => switchTab(item.getAttribute('data-tab')));
     });
     
     appContent.style.display = 'block';
-    const loadingScreen = document.getElementById('loadingScreen');
-    if (loadingScreen) loadingScreen.style.display = 'none';
-    
+    document.getElementById('loadingScreen').style.display = 'none';
     await renderDashboard();
 }
 
-// Start the admin panel
+// Add is_locked column to profiles (run once)
+async function addLockedColumn() {
+    const { error } = await window.supabase.rpc('add_locked_column');
+    if (error) console.log('Column may already exist');
+}
+
+// Start
 document.addEventListener('DOMContentLoaded', initAdminPanel);
