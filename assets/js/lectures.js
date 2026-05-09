@@ -21,7 +21,7 @@ async function loadLectures() {
         return allLectures;
     } catch (error) {
         console.error('Error loading lectures:', error);
-        showToast('Error loading lectures', 'error');
+        if (window.showToast) showToast('Error loading lectures', 'error');
         return [];
     }
 }
@@ -54,10 +54,44 @@ function hasAccess(lecture) {
 // Render lectures grid
 async function renderLectures() {
     const grid = document.getElementById('lecturesGrid');
-    if (!grid) return;
+    if (!grid) {
+        // If grid doesn't exist, create the structure first
+        const contentDiv = document.getElementById('dynamicContent');
+        if (contentDiv) {
+            contentDiv.innerHTML = `
+                <div class="filter-bar">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all" onclick="filterLectures('all')">All Lectures</button>
+                        <button class="filter-btn" data-filter="unlocked" onclick="filterLectures('unlocked')">Unlocked</button>
+                        <button class="filter-btn" data-filter="locked" onclick="filterLectures('locked')">Locked</button>
+                    </div>
+                    <select id="monthFilter" class="month-select" onchange="filterByMonth()">
+                        <option value="all">📅 All Months</option>
+                        <option value="1">📘 Month 1: Fundamentals</option>
+                        <option value="2">💉 Month 2: Medical-Surgical</option>
+                        <option value="3">💊 Month 3: Pharmacology</option>
+                        <option value="4">🤰 Month 4: Maternity & Pediatrics</option>
+                        <option value="5">🧠 Month 5: Psychiatric Nursing</option>
+                        <option value="6">⭐ Month 6: Final Review</option>
+                    </select>
+                </div>
+                <div class="lectures-grid" id="lecturesGrid">
+                    <div class="loading-state"><i class="fas fa-spinner fa-pulse"></i> Loading lectures...</div>
+                </div>
+            `;
+        }
+    }
+    
+    const gridElement = document.getElementById('lecturesGrid');
+    if (!gridElement) return;
     
     if (allLectures.length === 0) {
-        grid.innerHTML = '<div style="text-align: center; padding: 50px; color: white;">Loading lectures...</div>';
+        await loadLectures();
+        await loadUserPurchases();
+    }
+    
+    if (allLectures.length === 0) {
+        gridElement.innerHTML = '<div style="text-align: center; padding: 50px; color: var(--gray);">No lectures available</div>';
         return;
     }
     
@@ -76,11 +110,11 @@ async function renderLectures() {
     }
     
     if (filteredLectures.length === 0) {
-        grid.innerHTML = '<div style="text-align: center; padding: 50px; color: white;">No lectures found</div>';
+        gridElement.innerHTML = '<div style="text-align: center; padding: 50px; color: var(--gray);">No lectures found</div>';
         return;
     }
     
-    grid.innerHTML = filteredLectures.map(lecture => {
+    gridElement.innerHTML = filteredLectures.map(lecture => {
         const access = hasAccess(lecture);
         const isPurchased = userPurchases.includes(lecture.id);
         
@@ -96,7 +130,7 @@ async function renderLectures() {
         let priceHtml = '';
         if (!lecture.is_free && !isPurchased) {
             if (lecture.lecture_number === 2) {
-                priceHtml = `<div class="lecture-price">🔥 SPECIAL: ${formatCurrency(lecture.price)}<br><small>Then ${formatCurrency(APP_CONFIG.BUNDLE_PRICE)} for all</small></div>`;
+                priceHtml = `<div class="lecture-price">🔥 SPECIAL: ${formatCurrency(lecture.price)}<br><small>Then ${formatCurrency(APP_CONFIG?.BUNDLE_PRICE || 60)} for all</small></div>`;
             } else {
                 priceHtml = `<div class="lecture-price">${formatCurrency(lecture.price)} <small>one-time</small></div>`;
             }
@@ -116,6 +150,9 @@ async function renderLectures() {
             </div>
         `;
     }).join('');
+    
+    // Update stats if function exists
+    if (window.updateStats) window.updateStats();
 }
 
 // Watch lecture
@@ -124,7 +161,7 @@ async function watchLecture(lectureId) {
     if (!lecture) return;
     
     if (!hasAccess(lecture)) {
-        showToast('Please purchase this lecture first', 'error');
+        if (window.showToast) showToast('Please purchase this lecture first', 'error');
         return;
     }
     
@@ -160,7 +197,7 @@ async function watchLecture(lectureId) {
         `;
     }
     
-    modal.style.display = 'flex';
+    if (modal) modal.style.display = 'flex';
 }
 
 // Filter functions
@@ -170,10 +207,8 @@ function filterLectures(filter) {
     // Update active button state
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
-        if (btn.textContent.toLowerCase().includes(filter) || 
-            (filter === 'all' && btn.textContent === 'All') ||
-            (filter === 'unlocked' && btn.textContent === 'Unlocked') ||
-            (filter === 'locked' && btn.textContent === 'Locked')) {
+        const btnFilter = btn.getAttribute('data-filter');
+        if (btnFilter === filter) {
             btn.classList.add('active');
         }
     });
@@ -188,3 +223,72 @@ function filterByMonth() {
         renderLectures();
     }
 }
+
+// ============================================
+// EXPOSE FUNCTIONS TO GLOBAL WINDOW OBJECT
+// This makes them accessible from navigation
+// ============================================
+
+// Main render function for navigation
+window.renderLecturesView = async function() {
+    console.log('📚 Rendering lectures view...');
+    
+    // Reset filters
+    currentFilter = 'all';
+    currentMonth = 'all';
+    
+    // Ensure data is loaded
+    if (allLectures.length === 0) {
+        await loadLectures();
+        await loadUserPurchases();
+    }
+    
+    // Create the lectures UI structure
+    const contentDiv = document.getElementById('dynamicContent');
+    if (contentDiv) {
+        contentDiv.innerHTML = `
+            <div class="filter-bar">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all" onclick="filterLectures('all')">
+                        <i class="fas fa-list"></i> All Lectures
+                    </button>
+                    <button class="filter-btn" data-filter="unlocked" onclick="filterLectures('unlocked')">
+                        <i class="fas fa-check-circle"></i> Unlocked
+                    </button>
+                    <button class="filter-btn" data-filter="locked" onclick="filterLectures('locked')">
+                        <i class="fas fa-lock"></i> Locked
+                    </button>
+                </div>
+                <select id="monthFilter" class="month-select" onchange="filterByMonth()">
+                    <option value="all">📅 All Months</option>
+                    <option value="1">📘 Month 1: Fundamentals</option>
+                    <option value="2">💉 Month 2: Medical-Surgical</option>
+                    <option value="3">💊 Month 3: Pharmacology</option>
+                    <option value="4">🤰 Month 4: Maternity & Pediatrics</option>
+                    <option value="5">🧠 Month 5: Psychiatric Nursing</option>
+                    <option value="6">⭐ Month 6: Final Review</option>
+                </select>
+            </div>
+            <div class="lectures-grid" id="lecturesGrid">
+                <div class="loading-state"><i class="fas fa-spinner fa-pulse"></i> Loading lectures...</div>
+            </div>
+        `;
+    }
+    
+    // Render the lectures
+    await renderLectures();
+};
+
+// Also expose individual functions
+window.loadLectures = loadLectures;
+window.loadUserPurchases = loadUserPurchases;
+window.renderLectures = renderLectures;
+window.watchLecture = watchLecture;
+window.filterLectures = filterLectures;
+window.filterByMonth = filterByMonth;
+window.hasAccess = hasAccess;
+
+// For backward compatibility
+window.displayLectures = window.renderLecturesView;
+
+console.log('✅ Lectures module loaded and exposed globally');
