@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Jakiren NCLEX Nursing</title>
+    <title>Jakiren NCLEX Nursing | Professional Dashboard</title>
     <meta name="description" content="Premium NCLEX Nursing Preparation Course - 180 Lectures">
     <meta name="theme-color" content="#1b4f6e">
     
@@ -13,21 +13,144 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Jakiren NCLEX">
     
+    <!-- External Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    
     <!-- Styles -->
     <link rel="stylesheet" href="assets/css/style.css">
     
     <!-- Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div id="app">
         <div class="loading-screen" id="loadingScreen">
             <div class="loading-spinner"></div>
             <h2>🏥 Jakiren NCLEX Nursing</h2>
-            <p>Loading...</p>
+            <p>Loading professional dashboard...</p>
         </div>
-        <div id="appContent" style="display: none;"></div>
+        <div id="appContent" style="display: none;">
+            <!-- Sidebar Navigation (Professional Account Layout) -->
+            <div class="app-wrapper">
+                <aside class="sidebar">
+                    <div class="sidebar-brand">
+                        <div class="brand-icon">🏥</div>
+                        <div class="brand-text">
+                            <h2>Jakiren</h2>
+                            <span>NCLEX Nursing</span>
+                        </div>
+                    </div>
+                    
+                    <nav class="sidebar-nav">
+                        <a href="#" class="nav-item active" data-nav="dashboard">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="#" class="nav-item" data-nav="lectures">
+                            <i class="fas fa-book-open"></i>
+                            <span>My Lectures</span>
+                        </a>
+                        <a href="#" class="nav-item" data-nav="progress">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Progress</span>
+                        </a>
+                        <a href="#" class="nav-item" data-nav="certificates">
+                            <i class="fas fa-certificate"></i>
+                            <span>Certificates</span>
+                        </a>
+                        <a href="#" class="nav-item" data-nav="support">
+                            <i class="fas fa-headset"></i>
+                            <span>Support</span>
+                        </a>
+                    </nav>
+                    
+                    <div class="sidebar-footer">
+                        <div class="user-profile-mini">
+                            <div class="user-avatar" id="userAvatar">👤</div>
+                            <div class="user-info-mini">
+                                <span id="sidebarUserName">Loading...</span>
+                                <small>NCLEX Candidate</small>
+                            </div>
+                        </div>
+                        <button class="btn-logout" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </aside>
+
+                <!-- Main Content Area -->
+                <main class="main-content">
+                    <!-- Top Header Bar -->
+                    <div class="top-bar">
+                        <div class="page-title">
+                            <h1 id="pageMainTitle"><i class="fas fa-graduation-cap"></i> Nursing Dashboard</h1>
+                            <p id="pageSubtitle">Track your NCLEX journey to success</p>
+                        </div>
+                        <div class="top-actions">
+                            <div class="notification-badge">
+                                <i class="fas fa-bell"></i>
+                                <span class="badge-dot"></span>
+                            </div>
+                            <div class="user-greeting">
+                                Welcome, <strong id="welcomeNameShort">Nurse</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Content Container - where all views are rendered -->
+                    <div id="dynamicContent">
+                        <div class="loading-state">
+                            <i class="fas fa-spinner fa-pulse"></i> Loading dashboard...
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
     </div>
+
+    <!-- Modals (Shared Components) -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="if(window.closeModal) closeModal('paymentModal')">&times;</span>
+            <div class="modal-header">
+                <i class="fas fa-unlock-alt"></i>
+                <h2>Unlock Premium Lecture</h2>
+            </div>
+            <div id="paymentDetails"></div>
+            <div class="payment-actions">
+                <button class="payment-btn btn-mpesa" id="mpesaPayBtn">
+                    <i class="fas fa-mobile-alt"></i> M-Pesa (STK Push)
+                </button>
+                <button class="payment-btn btn-card" id="cardPayBtn">
+                    <i class="fab fa-cc-visa"></i> Card / PayPal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bundleModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="if(window.closeModal) closeModal('bundleModal')">&times;</span>
+            <div class="modal-header success">
+                <i class="fas fa-gift"></i>
+                <h2>Complete NCLEX Bundle Offer!</h2>
+            </div>
+            <div id="bundleDetails" class="bundle-details"></div>
+        </div>
+    </div>
+
+    <div id="videoModal" class="modal">
+        <div class="modal-content video-modal-content">
+            <span class="modal-close" onclick="if(window.closeModal) closeModal('videoModal')">&times;</span>
+            <div id="videoHeader"></div>
+            <div class="video-container" id="videoContainer"></div>
+            <div id="videoNotes" class="video-notes"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
 
     <!-- JavaScript Modules -->
     <script src="assets/js/config.js"></script>
@@ -38,5 +161,166 @@
     <script src="assets/js/lectures.js"></script>
     <script src="assets/js/ui.js"></script>
     <script src="assets/js/app.js"></script>
+    
+    <!-- Navigation Handler (connects sidebar to your existing modules) -->
+    <script>
+        (function() {
+            // Wait for app to initialize
+            document.addEventListener('DOMContentLoaded', function() {
+                // Function to set active nav item
+                function setActiveNavItem(activeNav) {
+                    document.querySelectorAll('.nav-item').forEach(item => {
+                        const navValue = item.getAttribute('data-nav');
+                        if (navValue === activeNav) {
+                            item.classList.add('active');
+                        } else {
+                            item.classList.remove('active');
+                        }
+                    });
+                }
+                
+                // Function to update page title based on view
+                function updatePageTitle(view) {
+                    const titles = {
+                        'dashboard': { title: 'Nursing Dashboard', subtitle: 'Track your NCLEX journey to success', icon: 'fa-graduation-cap' },
+                        'lectures': { title: 'My Lectures', subtitle: 'Access all your NCLEX course materials', icon: 'fa-book-open' },
+                        'progress': { title: 'Progress Tracker', subtitle: 'Monitor your NCLEX preparation progress', icon: 'fa-chart-line' },
+                        'certificates': { title: 'Certificates', subtitle: 'View and download your achievements', icon: 'fa-certificate' },
+                        'support': { title: 'Support Center', subtitle: 'Get help with your NCLEX preparation', icon: 'fa-headset' }
+                    };
+                    const data = titles[view] || titles['dashboard'];
+                    const titleEl = document.getElementById('pageMainTitle');
+                    if (titleEl) {
+                        titleEl.innerHTML = `<i class="fas ${data.icon}"></i> ${data.title}`;
+                    }
+                    const subtitleEl = document.getElementById('pageSubtitle');
+                    if (subtitleEl) {
+                        subtitleEl.textContent = data.subtitle;
+                    }
+                }
+                
+                // Navigation handler
+                function initNavigation() {
+                    const navItems = document.querySelectorAll('.nav-item');
+                    
+                    navItems.forEach(item => {
+                        item.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const navValue = this.getAttribute('data-nav');
+                            
+                            // Update active state
+                            setActiveNavItem(navValue);
+                            
+                            // Update page title
+                            updatePageTitle(navValue);
+                            
+                            // Call the appropriate render function from your modules
+                            // These should be exposed globally by your modules
+                            if (navValue === 'dashboard') {
+                                if (window.renderDashboardView) {
+                                    window.renderDashboardView();
+                                } else if (window.renderDashboard) {
+                                    window.renderDashboard();
+                                } else {
+                                    console.log('Dashboard render function not found');
+                                }
+                            } else if (navValue === 'lectures') {
+                                if (window.renderLecturesView) {
+                                    window.renderLecturesView();
+                                } else if (window.renderLectures) {
+                                    window.renderLectures();
+                                } else {
+                                    console.log('Lectures render function not found');
+                                }
+                            } else if (navValue === 'progress') {
+                                if (window.renderProgressView) {
+                                    window.renderProgressView();
+                                } else if (window.showProgress) {
+                                    window.showProgress();
+                                } else {
+                                    // Fallback: show progress section
+                                    const contentDiv = document.getElementById('dynamicContent');
+                                    if (contentDiv && window.updateStats) {
+                                        window.updateStats();
+                                        contentDiv.innerHTML = `
+                                            <div class="progress-section">
+                                                <div class="progress-header">
+                                                    <div class="progress-label"><i class="fas fa-chart-simple"></i> Detailed Progress Analytics</div>
+                                                    <div class="progress-value" id="progressPercentDetail">0% Complete</div>
+                                                </div>
+                                                <div class="progress-bar-container">
+                                                    <div class="progress-bar-fill" id="progressBarDetail"></div>
+                                                </div>
+                                                <div class="progress-details" id="progressDetailText"></div>
+                                            </div>
+                                            <div class="stats-grid" id="progressStatsGrid"></div>
+                                        `;
+                                        if (window.updateStats) window.updateStats();
+                                    }
+                                }
+                            } else if (navValue === 'certificates') {
+                                const contentDiv = document.getElementById('dynamicContent');
+                                if (contentDiv) {
+                                    contentDiv.innerHTML = `
+                                        <div class="certificates-container" style="background: white; border-radius: 24px; padding: 40px; text-align: center;">
+                                            <i class="fas fa-certificate" style="font-size: 64px; color: var(--primary); margin-bottom: 20px;"></i>
+                                            <h2>Your Certificates</h2>
+                                            <p style="color: var(--gray); margin: 16px 0;">Complete the NCLEX course to earn your certificate.</p>
+                                            <div class="progress-section" style="margin-top: 20px;">
+                                                <div class="progress-label">Course Completion Progress</div>
+                                                <div class="progress-bar-container">
+                                                    <div class="progress-bar-fill" id="certProgressBar" style="width: 0%"></div>
+                                                </div>
+                                                <p style="margin-top: 12px;" id="certProgressText">Complete more lectures to unlock your certificate</p>
+                                            </div>
+                                        </div>
+                                    `;
+                                    if (window.updateStats) window.updateStats();
+                                }
+                            } else if (navValue === 'support') {
+                                const contentDiv = document.getElementById('dynamicContent');
+                                if (contentDiv) {
+                                    contentDiv.innerHTML = `
+                                        <div class="support-container" style="background: white; border-radius: 24px; padding: 40px;">
+                                            <h2><i class="fas fa-headset"></i> Support Center</h2>
+                                            <p style="margin: 16px 0; color: var(--gray);">Need help with your NCLEX preparation? Contact our support team.</p>
+                                            <div class="featured-section" style="margin-top: 20px;">
+                                                <h3>Contact Information</h3>
+                                                <p><i class="fas fa-envelope"></i> support@jakiren.com</p>
+                                                <p><i class="fas fa-phone"></i> +254 700 000 000</p>
+                                                <p><i class="fab fa-whatsapp"></i> +254 700 000 000</p>
+                                            </div>
+                                            <div class="featured-section">
+                                                <h3>Frequently Asked Questions</h3>
+                                                <p><strong>How do I access lectures?</strong> - Purchase lectures individually or get the bundle.</p>
+                                                <p><strong>How long do I have access?</strong> - Lifetime access to purchased lectures.</p>
+                                                <p><strong>NCLEX exam preparation tips?</strong> - Check our study guides in each lecture.</p>
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                            }
+                        });
+                    });
+                }
+                
+                // Wait for app to fully initialize
+                setTimeout(() => {
+                    initNavigation();
+                    
+                    // Set welcome name if available
+                    if (window.currentUser && window.currentUser.email) {
+                        const name = window.currentUser.user_metadata?.full_name || window.currentUser.email.split('@')[0];
+                        const welcomeSpan = document.getElementById('welcomeNameShort');
+                        if (welcomeSpan) welcomeSpan.innerHTML = name;
+                        const sidebarNameSpan = document.getElementById('sidebarUserName');
+                        if (sidebarNameSpan) sidebarNameSpan.innerHTML = name;
+                        const avatarDiv = document.getElementById('userAvatar');
+                        if (avatarDiv) avatarDiv.innerHTML = name.charAt(0).toUpperCase();
+                    }
+                }, 500);
+            });
+        })();
+    </script>
 </body>
 </html>
