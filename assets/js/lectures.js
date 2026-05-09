@@ -1,11 +1,12 @@
 // ============================================
-// LECTURES MODULE
+// LECTURES MODULE - WITH SEARCH & NOTES
 // ============================================
 
 let allLectures = [];
 let userPurchases = [];
 let currentFilter = 'all';
 let currentMonth = 'all';
+let currentSearchTerm = '';
 
 // Load all lectures from Supabase
 async function loadLectures() {
@@ -28,13 +29,13 @@ async function loadLectures() {
 
 // Load user's purchased lectures
 async function loadUserPurchases() {
-    if (!currentUser) return [];
+    if (!window.currentUser) return [];
     
     try {
         const { data, error } = await supabase
             .from('user_purchases')
             .select('lecture_id')
-            .eq('user_id', currentUser.id);
+            .eq('user_id', window.currentUser.id);
         
         if (error) throw error;
         
@@ -51,6 +52,93 @@ function hasAccess(lecture) {
     return lecture.is_free || userPurchases.includes(lecture.id);
 }
 
+// Debounce function for search
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction() {
+        const later = () => {
+            clearTimeout(timeout);
+            func();
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Add search bar to filter bar
+function addSearchToLectures() {
+    const filterBar = document.querySelector('.filter-bar');
+    if (filterBar && !document.querySelector('.search-bar')) {
+        const searchHtml = `
+            <div class="search-bar" style="flex: 1; min-width: 200px;">
+                <input type="text" id="lectureSearch" placeholder="🔍 Search lectures by title..." autocomplete="off" style="width: 100%; padding: 10px 16px; border-radius: 40px; border: 2px solid var(--light-gray);">
+            </div>
+        `;
+        filterBar.insertAdjacentHTML('afterbegin', searchHtml);
+        
+        const searchInput = document.getElementById('lectureSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', debounce(() => {
+                currentSearchTerm = searchInput.value.toLowerCase();
+                renderLectures();
+            }, 300));
+        }
+    }
+}
+
+// ========== PERSONAL NOTES FOR LECTURES ==========
+async function saveLectureNotes(lectureId, notes) {
+    if (!window.currentUser) return;
+    
+    try {
+        // Check if notes table exists, if not create it
+        const { error } = await supabase
+            .from('user_notes')
+            .upsert({ 
+                user_id: window.currentUser.id, 
+                lecture_id: lectureId, 
+                notes: notes,
+                updated_at: new Date()
+            });
+        
+        if (error) {
+            // If table doesn't exist, store in localStorage as fallback
+            const notesKey = `notes_${window.currentUser.id}_${lectureId}`;
+            localStorage.setItem(notesKey, notes);
+            if (window.showToast) showToast('📝 Notes saved locally!');
+        } else {
+            if (window.showToast) showToast('📝 Notes saved!');
+        }
+    } catch (error) {
+        // Fallback to localStorage
+        const notesKey = `notes_${window.currentUser.id}_${lectureId}`;
+        localStorage.setItem(notesKey, notes);
+        if (window.showToast) showToast('📝 Notes saved locally!');
+    }
+}
+
+async function loadLectureNotes(lectureId) {
+    if (!window.currentUser) return '';
+    
+    try {
+        const { data, error } = await supabase
+            .from('user_notes')
+            .select('notes')
+            .eq('user_id', window.currentUser.id)
+            .eq('lecture_id', lectureId)
+            .single();
+        
+        if (data && data.notes) return data.notes;
+    } catch (error) {
+        // Try localStorage as fallback
+        const notesKey = `notes_${window.currentUser.id}_${lectureId}`;
+        const localNotes = localStorage.getItem(notesKey);
+        if (localNotes) return localNotes;
+    }
+    
+    return '';
+}
+
 // Render lectures grid
 async function renderLectures() {
     const grid = document.getElementById('lecturesGrid');
@@ -61,9 +149,15 @@ async function renderLectures() {
             contentDiv.innerHTML = `
                 <div class="filter-bar">
                     <div class="filter-buttons">
-                        <button class="filter-btn active" data-filter="all" onclick="filterLectures('all')">All Lectures</button>
-                        <button class="filter-btn" data-filter="unlocked" onclick="filterLectures('unlocked')">Unlocked</button>
-                        <button class="filter-btn" data-filter="locked" onclick="filterLectures('locked')">Locked</button>
+                        <button class="filter-btn active" data-filter="all" onclick="filterLectures('all')">
+                            <i class="fas fa-list"></i> All Lectures
+                        </button>
+                        <button class="filter-btn" data-filter="unlocked" onclick="filterLectures('unlocked')">
+                            <i class="fas fa-check-circle"></i> Unlocked
+                        </button>
+                        <button class="filter-btn" data-filter="locked" onclick="filterLectures('locked')">
+                            <i class="fas fa-lock"></i> Locked
+                        </button>
                     </div>
                     <select id="monthFilter" class="month-select" onchange="filterByMonth()">
                         <option value="all">📅 All Months</option>
@@ -80,6 +174,8 @@ async function renderLectures() {
                 </div>
             `;
         }
+        // Add search after creating structure
+        setTimeout(() => addSearchToLectures(), 100);
     }
     
     const gridElement = document.getElementById('lecturesGrid');
@@ -97,6 +193,14 @@ async function renderLectures() {
     
     let filteredLectures = [...allLectures];
     
+    // Apply search filter
+    if (currentSearchTerm) {
+        filteredLectures = filteredLectures.filter(l => 
+            l.title.toLowerCase().includes(currentSearchTerm) ||
+            (l.description && l.description.toLowerCase().includes(currentSearchTerm))
+        );
+    }
+    
     // Apply month filter
     if (currentMonth !== 'all') {
         filteredLectures = filteredLectures.filter(l => l.month === parseInt(currentMonth));
@@ -110,11 +214,16 @@ async function renderLectures() {
     }
     
     if (filteredLectures.length === 0) {
-        gridElement.innerHTML = '<div style="text-align: center; padding: 50px; color: var(--gray);">No lectures found</div>';
+        let message = 'No lectures found';
+        if (currentSearchTerm) message = `No results for "${currentSearchTerm}"`;
+        gridElement.innerHTML = `<div style="text-align: center; padding: 50px; color: var(--gray);"><i class="fas fa-search"></i> ${message}</div>`;
         return;
     }
     
-    gridElement.innerHTML = filteredLectures.map(lecture => {
+    // Show search results count
+    const searchInfo = currentSearchTerm ? `<div style="margin-bottom: 16px; color: var(--gray);"><i class="fas fa-search"></i> Found ${filteredLectures.length} results for "${currentSearchTerm}"</div>` : '';
+    
+    gridElement.innerHTML = searchInfo + filteredLectures.map(lecture => {
         const access = hasAccess(lecture);
         const isPurchased = userPurchases.includes(lecture.id);
         
@@ -130,9 +239,9 @@ async function renderLectures() {
         let priceHtml = '';
         if (!lecture.is_free && !isPurchased) {
             if (lecture.lecture_number === 2) {
-                priceHtml = `<div class="lecture-price">🔥 SPECIAL: ${formatCurrency(lecture.price)}<br><small>Then ${formatCurrency(APP_CONFIG?.BUNDLE_PRICE || 60)} for all</small></div>`;
+                priceHtml = `<div class="lecture-price">🔥 SPECIAL: ${window.formatCurrency ? window.formatCurrency(lecture.price) : 'KES ' + lecture.price}<br><small>Then ${window.formatCurrency ? window.formatCurrency(APP_CONFIG?.BUNDLE_PRICE || 60) : 'KES 60'} for all</small></div>`;
             } else {
-                priceHtml = `<div class="lecture-price">${formatCurrency(lecture.price)} <small>one-time</small></div>`;
+                priceHtml = `<div class="lecture-price">${window.formatCurrency ? window.formatCurrency(lecture.price) : 'KES ' + lecture.price} <small>one-time</small></div>`;
             }
         }
         
@@ -140,12 +249,12 @@ async function renderLectures() {
             <div class="lecture-card ${!access ? 'locked' : ''}">
                 ${badge}
                 <div class="lecture-number">Lecture ${lecture.lecture_number} • ${getMonthName(lecture.month)}</div>
-                <div class="lecture-title">${lecture.title}</div>
+                <div class="lecture-title">${highlightSearchTerm(lecture.title, currentSearchTerm)}</div>
                 <div class="lecture-duration">⏱️ ${lecture.duration || '2 hours'}</div>
                 ${priceHtml}
                 ${access ? 
                     `<button class="watch-btn" onclick="watchLecture(${lecture.id})">🎥 Watch Lecture</button>` : 
-                    `<button class="unlock-btn" onclick="initPayment(${JSON.stringify(lecture).replace(/"/g, '&quot;')})">🔓 Unlock ${formatCurrency(lecture.price)}</button>`
+                    `<button class="unlock-btn" onclick="initPayment(${JSON.stringify(lecture).replace(/"/g, '&quot;')})">🔓 Unlock ${window.formatCurrency ? window.formatCurrency(lecture.price) : 'KES ' + lecture.price}</button>`
                 }
             </div>
         `;
@@ -155,7 +264,26 @@ async function renderLectures() {
     if (window.updateStats) window.updateStats();
 }
 
-// Watch lecture
+// Helper function to highlight search terms
+function highlightSearchTerm(text, searchTerm) {
+    if (!searchTerm) return text;
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    return text.replace(regex, '<mark style="background: var(--warning); color: var(--dark); padding: 0 4px; border-radius: 4px;">$1</mark>');
+}
+
+function getMonthName(month) {
+    const months = {
+        1: '📘 Fundamentals',
+        2: '💉 Medical-Surgical',
+        3: '💊 Pharmacology',
+        4: '🤰 Maternity & Pediatrics',
+        5: '🧠 Psychiatric Nursing',
+        6: '⭐ Final Review'
+    };
+    return months[month] || `Month ${month}`;
+}
+
+// Updated watch lecture with personal notes
 async function watchLecture(lectureId) {
     const lecture = allLectures.find(l => l.id === lectureId);
     if (!lecture) return;
@@ -165,6 +293,12 @@ async function watchLecture(lectureId) {
         return;
     }
     
+    // Record study activity for streak tracking
+    if (window.recordStudyActivity) await window.recordStudyActivity();
+    
+    // Load saved notes
+    const savedNotes = await loadLectureNotes(lectureId);
+    
     const modal = document.getElementById('videoModal');
     const header = document.getElementById('videoHeader');
     const container = document.getElementById('videoContainer');
@@ -172,7 +306,7 @@ async function watchLecture(lectureId) {
     
     if (header) {
         header.innerHTML = `
-            <h2>${lecture.title}</h2>
+            <h2><i class="fas fa-video"></i> ${lecture.title}</h2>
             <p style="color: var(--gray); margin-top: 5px;">${lecture.duration || '2 hours'} • ${getMonthName(lecture.month)}</p>
         `;
     }
@@ -190,14 +324,37 @@ async function watchLecture(lectureId) {
     
     if (notes) {
         notes.innerHTML = `
-            <div style="margin-top: 16px; padding: 16px; background: var(--light-gray); border-radius: var(--radius-sm);">
+            <div style="margin-bottom: 16px; padding: 16px; background: var(--light-gray); border-radius: var(--radius-sm);">
                 <strong>📚 Study Notes:</strong><br>
                 ${lecture.study_notes || 'Complete NCLEX study guide with practice questions and detailed rationales.'}
+            </div>
+            <div style="border-top: 1px solid var(--light-gray); padding-top: 16px;">
+                <strong><i class="fas fa-pen"></i> Your Personal Notes:</strong>
+                <textarea id="personalNotes" rows="4" style="width: 100%; margin-top: 8px; padding: 12px; border-radius: 12px; border: 2px solid var(--light-gray); font-family: inherit; resize: vertical;">${escapeHtml(savedNotes)}</textarea>
+                <button class="btn btn-primary" style="margin-top: 12px;" onclick="saveCurrentNotes(${lecture.id})">
+                    <i class="fas fa-save"></i> Save Notes
+                </button>
             </div>
         `;
     }
     
     if (modal) modal.style.display = 'flex';
+}
+
+// Save notes from video modal
+window.saveCurrentNotes = async function(lectureId) {
+    const notesTextarea = document.getElementById('personalNotes');
+    if (notesTextarea) {
+        await saveLectureNotes(lectureId, notesTextarea.value);
+    }
+};
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // Filter functions
@@ -224,9 +381,18 @@ function filterByMonth() {
     }
 }
 
+// Clear search
+function clearSearch() {
+    currentSearchTerm = '';
+    const searchInput = document.getElementById('lectureSearch');
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    renderLectures();
+}
+
 // ============================================
 // EXPOSE FUNCTIONS TO GLOBAL WINDOW OBJECT
-// This makes them accessible from navigation
 // ============================================
 
 // Main render function for navigation
@@ -236,6 +402,7 @@ window.renderLecturesView = async function() {
     // Reset filters
     currentFilter = 'all';
     currentMonth = 'all';
+    currentSearchTerm = '';
     
     // Ensure data is loaded
     if (allLectures.length === 0) {
@@ -275,6 +442,9 @@ window.renderLecturesView = async function() {
         `;
     }
     
+    // Add search bar
+    setTimeout(() => addSearchToLectures(), 100);
+    
     // Render the lectures
     await renderLectures();
 };
@@ -287,8 +457,10 @@ window.watchLecture = watchLecture;
 window.filterLectures = filterLectures;
 window.filterByMonth = filterByMonth;
 window.hasAccess = hasAccess;
+window.clearSearch = clearSearch;
+window.saveLectureNotes = saveLectureNotes;
 
 // For backward compatibility
 window.displayLectures = window.renderLecturesView;
 
-console.log('✅ Lectures module loaded and exposed globally');
+console.log('✅ Lectures module loaded with search and notes features');
